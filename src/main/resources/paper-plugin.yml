@@ -1,0 +1,13 @@
+name: Vessel
+version: "1.0.0"
+main: org.maboroshi.vessel.Vessel
+loader: org.maboroshi.vessel.Loader
+description: A highly customizable Minecraft plugin for containing mobs in a vessel.
+author: Maboroshi
+website: https://github.com/MaboroshiKobo/Vessel
+api-version: "26.1"
+dependencies:
+  server:
+    PlaceholderAPI:
+      load: BEFORE
+      required: false
