@@ -1,5 +1,6 @@
 <div align="center">
   <h1>Vessel</h1>
+  <p>A highly customizable Paper plugin for capturing and releasing entities into configurable vessel items.</p>
 
   <p>
     <img alt="paper" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/paper_vector.svg">
@@ -13,6 +14,14 @@
   </p>
 </div>
 
+### Features
+
+Vessel provides flexible capture-and-release mechanics with a wide range of configuration options:
+
+* Capture entities into special **vessel** items that can be *consumable* or *reusable*.
+* Configure the capture and release experience with **particle** and **sound** effects, alongside **actions** that allow for running commands (supports chance, permissions, global execution, and randomized picks).
+* **MiniMessage** support with optional **PlaceholderAPI** support.
+
 ### Prerequisites
 
 To use this plugin, your server must be running **Paper** on `26.1` or higher, and Java 25 or higher.
@@ -20,6 +29,12 @@ To use this plugin, your server must be running **Paper** on `26.1` or higher, a
 ### Documentation & Support
 
 For a complete guide on features, commands, and configuration, please visit our [wiki](https://docs.maboroshi.org/). If you have questions or need to report a bug, join our [Discord server](https://discord.maboroshi.org).
+
+### Statistics
+
+This plugin utilizes [bStats](https://bstats.org/plugin/bukkit/Vessel/31642) to collect anonymous usage metrics.
+
+![bStats Metrics](https://bstats.org/signatures/bukkit/Vessel.svg)
 
 ## Building
 
