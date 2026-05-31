@@ -23,7 +23,9 @@ public class MessageConfig {
     public static class MessageConfiguration {
 
         @Comment("The global prefix used in messages. Use <prefix> in other messages to include it.")
-        public String prefix =
-                "<gradient:#51CF66:#2f9e44>🪅 <bold>Party Animals</bold></gradient> <dark_gray>➟</dark_gray>";
+        public String prefix = "<color:#F2CDCD><bold>Vessel</bold> ➟ </color>";
+
+        @Comment("Message shown when a player tries to capture a blacklisted entity.")
+        public String cannotCapture = "<red>You cannot capture this entity!</red>";
     }
 }

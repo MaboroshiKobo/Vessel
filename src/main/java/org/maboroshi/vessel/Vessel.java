@@ -1,18 +1,40 @@
 package org.maboroshi.vessel;
 
+import dev.rollczi.litecommands.LiteCommands;
+import dev.rollczi.litecommands.argument.ArgumentKey;
+import dev.rollczi.litecommands.bukkit.LiteBukkitFactory;
+import dev.rollczi.litecommands.suggestion.SuggestionResult;
+import java.util.stream.IntStream;
 import org.bstats.bukkit.Metrics;
+import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.maboroshi.vessel.command.VesselCommand;
 import org.maboroshi.vessel.config.ConfigManager;
+import org.maboroshi.vessel.handler.CooldownHandler;
+import org.maboroshi.vessel.handler.EffectHandler;
+import org.maboroshi.vessel.listener.CaptureListener;
+import org.maboroshi.vessel.listener.ReleaseListener;
+import org.maboroshi.vessel.manager.VesselManager;
+import org.maboroshi.vessel.util.Logger;
 
 public final class Vessel extends JavaPlugin {
     private static Vessel plugin;
 
     private ConfigManager configManager;
+    private Logger log;
+    private EffectHandler effectHandler;
+    private CooldownHandler cooldownHandler;
+    private LiteCommands<CommandSender> commandManager;
+    private VesselManager vesselManager;
 
     @Override
     public void onEnable() {
         plugin = this;
+        this.log = new Logger(this);
         this.configManager = new ConfigManager(this, getDataFolder());
+        this.effectHandler = new EffectHandler(log);
+        this.cooldownHandler = new CooldownHandler();
+        this.vesselManager = new VesselManager(this);
 
         try {
             configManager.loadConfig();
@@ -23,14 +45,51 @@ public final class Vessel extends JavaPlugin {
             return;
         }
 
+        getServer().getPluginManager().registerEvents(new CaptureListener(this), this);
+        getServer().getPluginManager().registerEvents(new ReleaseListener(this), this);
+
+        this.commandManager = LiteBukkitFactory.builder("fallback-prefix", this)
+                .commands(new VesselCommand(this))
+                .argumentSuggestion(String.class, ArgumentKey.of("type"), SuggestionResult.of("consumable", "reusable"))
+                .argumentSuggestion(
+                        int.class,
+                        SuggestionResult.of(IntStream.rangeClosed(1, 64)
+                                .mapToObj(String::valueOf)
+                                .toList()))
+                .build();
+
         @SuppressWarnings("unused")
         Metrics metrics = new Metrics(this, 31642);
     }
 
     @Override
-    public void onDisable() {}
+    public void onDisable() {
+        if (this.commandManager != null) {
+            this.commandManager.unregister();
+        }
+    }
 
     public static Vessel getPlugin() {
         return plugin;
+    }
+
+    public ConfigManager getConfigManager() {
+        return configManager;
+    }
+
+    public Logger getPluginLogger() {
+        return log;
+    }
+
+    public EffectHandler getEffectHandler() {
+        return effectHandler;
+    }
+
+    public CooldownHandler getCooldownHandler() {
+        return cooldownHandler;
+    }
+
+    public VesselManager getVesselManager() {
+        return vesselManager;
     }
 }
