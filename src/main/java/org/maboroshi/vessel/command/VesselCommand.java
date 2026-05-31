@@ -33,10 +33,11 @@ public class VesselCommand {
     @Permission("vessel.command")
     void execute(@Context CommandSender sender) {
         messageUtils.send(
-            sender,
-            config.getMessageConfig().commands.pluginInfo,
-            messageUtils.tag("version", plugin.getPluginMeta().getVersion()),
-            messageUtils.tag("authors", String.join(", ", plugin.getPluginMeta().getAuthors())));
+                sender,
+                config.getMessageConfig().commands.pluginInfo,
+                messageUtils.tag("version", plugin.getPluginMeta().getVersion()),
+                messageUtils.tag(
+                        "authors", String.join(", ", plugin.getPluginMeta().getAuthors())));
     }
 
     @Execute(name = "reload")
@@ -48,7 +49,8 @@ public class VesselCommand {
             messageUtils.send(sender, config.getMessageConfig().general.reloadSuccess);
             log.info("Configuration reloaded by " + (sender.getName() == null ? "console" : sender.getName()));
         } catch (Exception e) {
-            messageUtils.send(sender, config.getMessageConfig().general.reloadFail, messageUtils.tag("error", e.getMessage()));
+            messageUtils.send(
+                    sender, config.getMessageConfig().general.reloadFail, messageUtils.tag("error", e.getMessage()));
             log.error("Failed to reload configuration: " + e.getMessage());
         }
     }
@@ -86,16 +88,16 @@ public class VesselCommand {
         item.setAmount(amount);
         player.getInventory().addItem(item);
         messageUtils.send(
-            sender,
-            config.getMessageConfig().commands.giveSender,
-            messageUtils.tag("player", player.getName()),
-            messageUtils.tag("amount", amount),
-            messageUtils.tag("type", type));
+                sender,
+                config.getMessageConfig().commands.giveSender,
+                messageUtils.tag("player", player.getName()),
+                messageUtils.tag("amount", amount),
+                messageUtils.tag("type", type));
         messageUtils.send(
-            player,
-            config.getMessageConfig().commands.givePlayer,
-            messageUtils.tag("amount", amount),
-            messageUtils.tag("type", type));
+                player,
+                config.getMessageConfig().commands.givePlayer,
+                messageUtils.tag("amount", amount),
+                messageUtils.tag("type", type));
         if (isSilent) {
             log.info("Gave " + player.getName() + " " + amount + " " + type + " vessel(s) silently.");
         }

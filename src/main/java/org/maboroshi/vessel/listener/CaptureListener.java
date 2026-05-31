@@ -10,9 +10,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
+import org.maboroshi.vessel.api.event.VesselCaptureEvent;
 import org.maboroshi.vessel.config.ConfigManager;
-import org.maboroshi.vessel.config.objects.effects.EffectGroup;
-import org.maboroshi.vessel.handler.EffectHandler;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
@@ -23,14 +22,12 @@ public class CaptureListener implements Listener {
     private final Logger log;
     private final MessageUtils messageUtils;
     private final ConfigManager config;
-    private final EffectHandler effectHandler;
 
     public CaptureListener(Vessel plugin) {
         this.plugin = plugin;
         this.log = plugin.getPluginLogger();
         this.messageUtils = plugin.getMessageUtils();
         this.config = plugin.getConfigManager();
-        this.effectHandler = plugin.getEffectHandler();
     }
 
     @EventHandler
@@ -58,7 +55,8 @@ public class CaptureListener implements Listener {
             return;
         }
 
-        if (plugin.getCooldownHandler().isOnCooldown(event.getPlayer().getUniqueId(), config.getMainConfig().cooldown)) {
+        if (plugin.getCooldownHandler()
+                .isOnCooldown(event.getPlayer().getUniqueId(), config.getMainConfig().cooldown)) {
             return;
         }
 
@@ -79,11 +77,14 @@ public class CaptureListener implements Listener {
         if (blacklisted) {
             log.debug("Player " + event.getPlayer().getName() + " tried to capture a blacklisted entity.");
             messageUtils.send(
-                event.getPlayer(),
-                config.getMessageConfig().general.cannotCapture,
-                messageUtils.tag("entity_type", entityType),
-                messageUtils.tagParsed("entity_name", event.getRightClicked().getName() == null ? "" : event.getRightClicked().getName())
-            );
+                    event.getPlayer(),
+                    config.getMessageConfig().general.cannotCapture,
+                    messageUtils.tag("entity_type", entityType),
+                    messageUtils.tagParsed(
+                            "entity_name",
+                            event.getRightClicked().getName() == null
+                                    ? ""
+                                    : event.getRightClicked().getName()));
             return;
         }
 
@@ -95,7 +96,9 @@ public class CaptureListener implements Listener {
         Location captureLocation = target.getLocation();
 
         EntitySnapshot snapshot = target.createSnapshot();
-        captureMeta.getPersistentDataContainer().set(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING, snapshot.getAsString());
+        captureMeta
+                .getPersistentDataContainer()
+                .set(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING, snapshot.getAsString());
 
         if (isConsumable) {
             ItemHandler.applyText(
@@ -116,6 +119,15 @@ public class CaptureListener implements Listener {
         }
 
         captureItem.setItemMeta(captureMeta);
+
+        VesselCaptureEvent captureEvent =
+                new VesselCaptureEvent(event.getPlayer(), snapshot, captureLocation, tier, captureItem);
+        plugin.getServer().getPluginManager().callEvent(captureEvent);
+
+        if (captureEvent.isCancelled()) {
+            return;
+        }
+
         handItem.setAmount(handItem.getAmount() - 1);
 
         event.getPlayer()
@@ -124,11 +136,6 @@ public class CaptureListener implements Listener {
                 .values()
                 .forEach(leftover ->
                         event.getPlayer().getWorld().dropItem(event.getPlayer().getLocation(), leftover));
-
-        EffectGroup group = isConsumable
-                ? config.getMainConfig().modules.consumable.captureEffects
-                : config.getMainConfig().modules.reusable.captureEffects;
-        effectHandler.playEffects(group, captureLocation, false);
 
         target.remove();
         event.setCancelled(true);

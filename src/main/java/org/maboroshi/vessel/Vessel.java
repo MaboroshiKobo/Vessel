@@ -10,8 +10,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.maboroshi.vessel.command.VesselCommand;
 import org.maboroshi.vessel.config.ConfigManager;
+import org.maboroshi.vessel.handler.ActionHandler;
 import org.maboroshi.vessel.handler.CooldownHandler;
 import org.maboroshi.vessel.handler.EffectHandler;
+import org.maboroshi.vessel.handler.VesselEventHandler;
 import org.maboroshi.vessel.listener.CaptureListener;
 import org.maboroshi.vessel.listener.ReleaseListener;
 import org.maboroshi.vessel.manager.VesselManager;
@@ -25,6 +27,7 @@ public final class Vessel extends JavaPlugin {
     private Logger log;
     private EffectHandler effectHandler;
     private CooldownHandler cooldownHandler;
+    private ActionHandler actionHandler;
     private LiteCommands<CommandSender> commandManager;
     private VesselManager vesselManager;
     private MessageUtils messageUtils;
@@ -47,7 +50,9 @@ public final class Vessel extends JavaPlugin {
         this.log = new Logger(this, messageUtils);
         this.effectHandler = new EffectHandler(log);
         this.cooldownHandler = new CooldownHandler();
+        this.actionHandler = new ActionHandler(this);
         this.vesselManager = new VesselManager(this);
+        getServer().getPluginManager().registerEvents(new VesselEventHandler(this), this);
 
         getServer().getPluginManager().registerEvents(new CaptureListener(this), this);
         getServer().getPluginManager().registerEvents(new ReleaseListener(this), this);
@@ -99,5 +104,9 @@ public final class Vessel extends JavaPlugin {
 
     public MessageUtils getMessageUtils() {
         return messageUtils;
+    }
+
+    public ActionHandler getActionHandler() {
+        return actionHandler;
     }
 }

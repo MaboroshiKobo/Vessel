@@ -13,6 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
+import org.maboroshi.vessel.api.event.VesselReleaseEvent;
 import org.maboroshi.vessel.config.ConfigManager;
 import org.maboroshi.vessel.handler.CooldownHandler;
 import org.maboroshi.vessel.handler.EffectHandler;
@@ -64,7 +65,8 @@ public class ReleaseListener implements Listener {
             return;
         }
 
-        String capturedNBT = handMeta.getPersistentDataContainer().get(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING);
+        String capturedNBT =
+                handMeta.getPersistentDataContainer().get(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING);
         if (capturedNBT == null) {
             log.debug("Ignored interaction: Captured entity NBT is null");
             return;
@@ -84,24 +86,58 @@ public class ReleaseListener implements Listener {
             return;
         }
 
-        EntitySnapshot snapshot = plugin.getServer().getEntityFactory().createEntitySnapshot(capturedNBT);
-        Entity releasedEntity = snapshot.createEntity(releaseLocation);
+        String vesselType =
+                handMeta.getPersistentDataContainer().get(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING);
 
-        String vesselType = handMeta.getPersistentDataContainer().get(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING);
+        EntitySnapshot snapshot = plugin.getServer().getEntityFactory().createEntitySnapshot(capturedNBT);
+
+        VesselReleaseEvent releaseEvent =
+                new VesselReleaseEvent(event.getPlayer(), snapshot, releaseLocation, vesselType, handItem);
+        plugin.getServer().getPluginManager().callEvent(releaseEvent);
+
+        if (releaseEvent.isCancelled()) {
+            return;
+        }
+
+        Entity releasedEntity = snapshot.createEntity(releaseLocation);
 
         if ("consumable".equals(vesselType)) {
             effectHandler.playEffects(
-                    config.getMainConfig().modules.consumable.releaseEffects, releasedEntity.getLocation(), false);
+                    config.getMainConfig().modules.consumable.events.release.effects,
+                    releasedEntity.getLocation(),
+                    false);
             handItem.setAmount(handItem.getAmount() - 1);
+            plugin.getActionHandler()
+                    .process(
+                            event.getPlayer(),
+                            config.getMainConfig()
+                                    .modules
+                                    .consumable
+                                    .events
+                                    .release
+                                    .actions
+                                    .values());
         } else if ("reusable".equals(vesselType)) {
             effectHandler.playEffects(
-                    config.getMainConfig().modules.reusable.releaseEffects, releasedEntity.getLocation(), false);
+                    config.getMainConfig().modules.reusable.events.release.effects,
+                    releasedEntity.getLocation(),
+                    false);
             handMeta.getPersistentDataContainer().remove(NamespacedKeys.CAPTURED_ENTITY);
             ItemHandler.applyText(
                     handMeta,
                     config.getMainConfig().modules.reusable.displayName,
                     config.getMainConfig().modules.reusable.lore);
             handItem.setItemMeta(handMeta);
+            plugin.getActionHandler()
+                    .process(
+                            event.getPlayer(),
+                            config.getMainConfig()
+                                    .modules
+                                    .reusable
+                                    .events
+                                    .release
+                                    .actions
+                                    .values());
         }
     }
 

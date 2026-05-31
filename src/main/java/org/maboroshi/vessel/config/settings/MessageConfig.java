@@ -51,7 +51,8 @@ public class MessageConfig {
             public String pluginInfo = "<green>Vessel Plugin v<version> by <authors>.</green>";
 
             @Comment("Invalid type message")
-            public String invalidType = "<red>Invalid vessel type or module disabled! Valid types: consumable, reusable.</red>";
+            public String invalidType =
+                    "<red>Invalid vessel type or module disabled! Valid types: consumable, reusable.</red>";
 
             @Comment("Invalid amount message. Supports <min> and <max> tags.")
             public String invalidAmount = "<red>Amount must be between <min> and <max>.</red>";
@@ -72,10 +73,12 @@ public class MessageConfig {
             public String show = "<prefix> <white>/vessel</white> - <gray>Shows plugin info</gray>";
 
             @Comment("Help: give usage")
-            public String give = "<prefix> <white>/vessel give <player> <type> <amount> [-s]</white> - <gray>Give vessels (permission: vessel.command.give)</gray>";
+            public String give =
+                    "<prefix> <white>/vessel give <player> <type> <amount> [-s]</white> - <gray>Give vessels (permission: vessel.command.give)</gray>";
 
             @Comment("Help: reload usage")
-            public String reload = "<prefix> <white>/vessel reload</white> - <gray>Reloads plugin config (permission: vessel.command.reload)</gray>";
+            public String reload =
+                    "<prefix> <white>/vessel reload</white> - <gray>Reloads plugin config (permission: vessel.command.reload)</gray>";
         }
     }
 }

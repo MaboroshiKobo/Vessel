@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.maboroshi.vessel.config.objects.CommandAction;
 import org.maboroshi.vessel.config.objects.effects.EffectGroup;
 import org.maboroshi.vessel.config.objects.effects.SoundEffect;
 
@@ -28,7 +29,10 @@ public class MainConfig {
         @Comment("Enable debug mode to see detailed logs in the console.")
         public boolean debug = false;
 
-        @Comment({"The cooldown time in milliseconds between capture and release actions to prevent rapid reuse.", "Recommended minimum value: 500."})
+        @Comment({
+            "The cooldown time in milliseconds between capture and release actions to prevent rapid reuse.",
+            "Recommended minimum value: 500."
+        })
         public long cooldown = 500L;
 
         @Comment("Control which parts of the plugin should be active.")
@@ -66,18 +70,11 @@ public class MainConfig {
                 "<reset>",
                 "<gray>Contains <entity_name> of type <entity_type>.</gray>");
 
+        @Comment("Event configuration")
+        public ModuleEvents events = new ModuleEvents();
+
         @Comment("List of entity types that cannot be captured in consumable vessels.")
         public List<String> blacklistedMobs = List.of("ENDER_DRAGON", "WITHER", "WARDEN", "PLAYER");
-
-        @Comment("Effects to play when capturing or releasing entities with consumable vessels.")
-        public EffectGroup captureEffects = new EffectGroup(
-                new HashMap<>(Map.of("notification", new SoundEffect("block.note_block.pling", 1f, 1f))),
-                new HashMap<>());
-
-        @Comment("Effects to play when capturing or releasing entities with consumable vessels.")
-        public EffectGroup releaseEffects = new EffectGroup(
-                new HashMap<>(Map.of("notification", new SoundEffect("block.note_block.pling", 1f, 1f))),
-                new HashMap<>());
     }
 
     @Configuration
@@ -102,17 +99,35 @@ public class MainConfig {
                 "<reset>",
                 "<gray>Contains <entity_name> of type <entity_type>.</gray>");
 
+        @Comment("Event configuration")
+        public ModuleEvents events = new ModuleEvents();
+
         @Comment("List of entity types that cannot be captured in reusable vessels.")
         public List<String> blacklistedMobs = List.of("ENDER_DRAGON", "WITHER", "WARDEN", "PLAYER");
+    }
 
-        @Comment("Effects to play when capturing or releasing entities with reusable vessels.")
-        public EffectGroup captureEffects = new EffectGroup(
+    @Configuration
+    public static class VesselEvent {
+        @Comment("Enable this event processing block.")
+        public boolean enabled = true;
+
+        @Comment("Visual/Audio effects to play when this event triggers.")
+        public EffectGroup effects = new EffectGroup(
                 new HashMap<>(Map.of("notification", new SoundEffect("block.note_block.pling", 1f, 1f))),
                 new HashMap<>());
 
-        @Comment("Effects to play when capturing or releasing entities with reusable vessels.")
-        public EffectGroup releaseEffects = new EffectGroup(
-                new HashMap<>(Map.of("notification", new SoundEffect("block.note_block.pling", 1f, 1f))),
-                new HashMap<>());
+        @Comment("Actions that execute when the event triggers.")
+        public Map<String, CommandAction> actions = new HashMap<>();
+
+        public VesselEvent() {}
+    }
+
+    @Configuration
+    public static class ModuleEvents {
+        @Comment("Capture event settings for this module")
+        public VesselEvent capture = new VesselEvent();
+
+        @Comment("Release event settings for this module")
+        public VesselEvent release = new VesselEvent();
     }
 }
