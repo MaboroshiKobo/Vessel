@@ -16,16 +16,19 @@ import org.maboroshi.vessel.config.objects.effects.EffectGroup;
 import org.maboroshi.vessel.handler.EffectHandler;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Logger;
+import org.maboroshi.vessel.util.MessageUtils;
 
 public class CaptureListener implements Listener {
     private final Vessel plugin;
     private final Logger log;
+    private final MessageUtils messageUtils;
     private final ConfigManager config;
     private final EffectHandler effectHandler;
 
     public CaptureListener(Vessel plugin) {
         this.plugin = plugin;
         this.log = plugin.getPluginLogger();
+        this.messageUtils = plugin.getMessageUtils();
         this.config = plugin.getConfigManager();
         this.effectHandler = plugin.getEffectHandler();
     }
@@ -62,7 +65,7 @@ public class CaptureListener implements Listener {
         }
 
         String entityType = event.getRightClicked().getType().toString();
-        if ((isConsumable
+        boolean blacklisted = (isConsumable
                         && config.getMainConfig()
                                 .modules
                                 .consumable
@@ -73,10 +76,19 @@ public class CaptureListener implements Listener {
                                 .modules
                                 .reusable
                                 .blacklistedMobs
-                                .contains(entityType))) {
+                                .contains(entityType));
+
+        if (blacklisted) {
             log.debug("Player " + event.getPlayer().getName() + " tried to capture a blacklisted entity.");
-            event.getPlayer()
-                    .sendRichMessage(config.getMessageConfig().cannotCapture.replace("<entity_type>", entityType));
+            messageUtils.send(
+                    event.getPlayer(),
+                    config.getMessageConfig().cannotCapture,
+                    messageUtils.tag("entity_type", entityType),
+                    messageUtils.tagParsed(
+                            "entity_name",
+                            event.getRightClicked().getName() == null
+                                    ? ""
+                                    : event.getRightClicked().getName()));
             return;
         }
 

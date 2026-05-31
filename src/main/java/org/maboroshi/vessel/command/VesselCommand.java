@@ -11,23 +11,28 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.util.Logger;
+import org.maboroshi.vessel.util.MessageUtils;
 
 @Command(name = "vessel")
 public class VesselCommand {
 
     private final Vessel plugin;
     private final Logger log;
+    private final MessageUtils messageUtils;
 
     public VesselCommand(Vessel plugin) {
         this.plugin = plugin;
         this.log = plugin.getPluginLogger();
+        this.messageUtils = plugin.getMessageUtils();
     }
 
     @Execute
     @Permission("vessel.command")
     void execute(@Context CommandSender sender) {
-        sender.sendRichMessage("<green>Vessel Plugin v" + plugin.getPluginMeta().getVersion() + " by "
-                + plugin.getPluginMeta().getAuthors() + ".");
+        messageUtils.send(
+                sender,
+                "<green>Vessel Plugin v" + plugin.getPluginMeta().getVersion() + " by "
+                        + plugin.getPluginMeta().getAuthors() + ".</green>");
     }
 
     @Execute(name = "give")
@@ -40,17 +45,19 @@ public class VesselCommand {
             @Flag({"-silent", "-s"}) boolean isSilent) {
         ItemStack item = plugin.getVesselManager().createEmptyVessel(type);
         if (item == null) {
-            sender.sendRichMessage("<red>Invalid vessel type or module disabled! Valid types: consumable, reusable.");
+            messageUtils.send(
+                    sender, "<red>Invalid vessel type or module disabled! Valid types: consumable, reusable.</red>");
             return;
         }
         if (amount < 1 || amount > 64) {
-            sender.sendRichMessage("<red>Amount must be between 1 and 64.</red>");
+            messageUtils.send(sender, "<red>Amount must be between 1 and 64.</red>");
             return;
         }
         item.setAmount(amount);
         player.getInventory().addItem(item);
-        sender.sendRichMessage("<green>Gave " + player.getName() + " " + amount + " " + type + " vessel(s).");
-        player.sendRichMessage("<green>You received " + amount + " " + type + " vessel(s).");
+        messageUtils.send(
+                sender, "<green>Gave " + player.getName() + " " + amount + " " + type + " vessel(s).</green>");
+        messageUtils.send(player, "<green>You received " + amount + " " + type + " vessel(s).</green>");
         if (isSilent) {
             log.info("Gave " + player.getName() + " " + amount + " " + type + " vessel(s) silently.");
         }

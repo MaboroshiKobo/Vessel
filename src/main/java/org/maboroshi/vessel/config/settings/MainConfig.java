@@ -61,7 +61,7 @@ public class MainConfig {
                 "<gray>Right-click to release the captured mob.</gray>",
                 "<red>Breaks upon release.</red>",
                 "<reset>",
-                "Contains <entity_name> of type <entity_type>.");
+                "<gray>Contains <entity_name> of type <entity_type>.</gray>");
 
         @Comment("List of entity types that cannot be captured in consumable vessels.")
         public List<String> blacklistedMobs = List.of("ENDER_DRAGON", "WITHER", "WARDEN", "PLAYER");
@@ -97,7 +97,7 @@ public class MainConfig {
                 "<gray>Right-click to release the captured mob.</gray>",
                 "<green>Can be reused multiple times.</green>",
                 "<reset>",
-                "Contains <entity_name> of type <entity_type>.");
+                "<gray>Contains <entity_name> of type <entity_type>.</gray>");
 
         @Comment("List of entity types that cannot be captured in reusable vessels.")
         public List<String> blacklistedMobs = List.of("ENDER_DRAGON", "WITHER", "WARDEN", "PLAYER");

@@ -1,15 +1,16 @@
 package org.maboroshi.vessel.util;
 
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.config.ConfigManager;
 
 public class Logger {
     private final Vessel plugin;
+    private final MessageUtils messageUtils;
 
     public Logger(Vessel plugin) {
         this.plugin = plugin;
+        this.messageUtils = plugin.getMessageUtils();
     }
 
     private ConfigManager getConfig() {
@@ -21,7 +22,7 @@ public class Logger {
         String prefix;
         if (config != null && config.getMessageConfig() != null) prefix = config.getMessageConfig().prefix;
         else prefix = "<color:#F2CDCD><bold>Vessel</bold> ➟ </color>";
-        Bukkit.getConsoleSender().sendMessage(MiniMessage.miniMessage().deserialize(prefix + colorTag + message));
+        messageUtils.send(Bukkit.getConsoleSender(), prefix + colorTag + message);
     }
 
     public void debug(String message) {

@@ -19,6 +19,7 @@ import org.maboroshi.vessel.handler.CooldownHandler;
 import org.maboroshi.vessel.handler.EffectHandler;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Logger;
+import org.maboroshi.vessel.util.MessageUtils;
 
 public class ReleaseListener implements Listener {
     private static final long RELEASE_LOCK_MS = 500L;
@@ -28,6 +29,7 @@ public class ReleaseListener implements Listener {
     private final Logger log;
     private final EffectHandler effectHandler;
     private final CooldownHandler cooldownHandler;
+    private final MessageUtils messageUtils;
 
     public ReleaseListener(Vessel plugin) {
         this.plugin = plugin;
@@ -35,6 +37,7 @@ public class ReleaseListener implements Listener {
         this.log = plugin.getPluginLogger();
         this.effectHandler = plugin.getEffectHandler();
         this.cooldownHandler = plugin.getCooldownHandler();
+        this.messageUtils = plugin.getMessageUtils();
     }
 
     @EventHandler
@@ -81,7 +84,7 @@ public class ReleaseListener implements Listener {
 
         Location releaseLocation = findSafeReleaseLocation(clickedBlock);
         if (releaseLocation == null) {
-            event.getPlayer().sendRichMessage("<red>There is no safe space to release this vessel.</red>");
+            messageUtils.send(event.getPlayer(), "<red>There is no safe space to release this vessel.</red>");
             return;
         }
 

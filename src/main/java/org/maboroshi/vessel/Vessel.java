@@ -16,6 +16,7 @@ import org.maboroshi.vessel.listener.CaptureListener;
 import org.maboroshi.vessel.listener.ReleaseListener;
 import org.maboroshi.vessel.manager.VesselManager;
 import org.maboroshi.vessel.util.Logger;
+import org.maboroshi.vessel.util.MessageUtils;
 
 public final class Vessel extends JavaPlugin {
     private static Vessel plugin;
@@ -26,24 +27,27 @@ public final class Vessel extends JavaPlugin {
     private CooldownHandler cooldownHandler;
     private LiteCommands<CommandSender> commandManager;
     private VesselManager vesselManager;
+    private MessageUtils messageUtils;
 
     @Override
     public void onEnable() {
         plugin = this;
-        this.log = new Logger(this);
         this.configManager = new ConfigManager(this, getDataFolder());
-        this.effectHandler = new EffectHandler(log);
-        this.cooldownHandler = new CooldownHandler();
-        this.vesselManager = new VesselManager(this);
 
         try {
             configManager.loadConfig();
             configManager.loadMessages();
+            this.messageUtils = new MessageUtils(this.configManager);
         } catch (Exception e) {
             getLogger().severe("Failed to load configuration: " + e.getMessage());
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+
+        this.log = new Logger(this);
+        this.effectHandler = new EffectHandler(log);
+        this.cooldownHandler = new CooldownHandler();
+        this.vesselManager = new VesselManager(this);
 
         getServer().getPluginManager().registerEvents(new CaptureListener(this), this);
         getServer().getPluginManager().registerEvents(new ReleaseListener(this), this);
@@ -91,5 +95,9 @@ public final class Vessel extends JavaPlugin {
 
     public VesselManager getVesselManager() {
         return vesselManager;
+    }
+
+    public MessageUtils getMessageUtils() {
+        return messageUtils;
     }
 }
