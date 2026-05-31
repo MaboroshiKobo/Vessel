@@ -22,8 +22,6 @@ import org.maboroshi.vessel.util.MessageUtils;
 import org.maboroshi.vessel.util.NamespacedKeys;
 
 public class ReleaseListener implements Listener {
-    public static final long RELEASE_LOCK_MS = 500L;
-
     private final Vessel plugin;
     private final ConfigManager config;
     private final Logger log;
@@ -72,7 +70,7 @@ public class ReleaseListener implements Listener {
             return;
         }
 
-        if (cooldownHandler.isOnCooldown(event.getPlayer().getUniqueId(), RELEASE_LOCK_MS)) {
+        if (cooldownHandler.isOnCooldown(event.getPlayer().getUniqueId(), config.getMainConfig().cooldown)) {
             event.setCancelled(true);
             return;
         }

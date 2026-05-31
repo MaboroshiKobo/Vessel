@@ -58,7 +58,7 @@ public class CaptureListener implements Listener {
             return;
         }
 
-        if (plugin.getCooldownHandler().isOnCooldown(event.getPlayer().getUniqueId(), 500L)) {
+        if (plugin.getCooldownHandler().isOnCooldown(event.getPlayer().getUniqueId(), config.getMainConfig().cooldown)) {
             return;
         }
 

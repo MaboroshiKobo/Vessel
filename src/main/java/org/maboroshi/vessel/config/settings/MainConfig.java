@@ -28,6 +28,9 @@ public class MainConfig {
         @Comment("Enable debug mode to see detailed logs in the console.")
         public boolean debug = false;
 
+        @Comment({"The cooldown time in milliseconds between capture and release actions to prevent rapid reuse.", "Recommended minimum value: 500."})
+        public long cooldown = 500L;
+
         @Comment("Control which parts of the plugin should be active.")
         public ModuleSettings modules = new ModuleSettings();
     }
