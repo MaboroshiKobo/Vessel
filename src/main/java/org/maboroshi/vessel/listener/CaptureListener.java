@@ -1,5 +1,6 @@
 package org.maboroshi.vessel.listener;
 
+import java.util.Locale;
 import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -56,12 +57,27 @@ public class CaptureListener implements Listener {
             return;
         }
 
+        if (!event.getPlayer().hasPermission("vessel.use." + tier)) {
+            messageUtils.send(event.getPlayer(), config.getMessageConfig().general.cannotUseVessel);
+            return;
+        }
+
+        String entityType = event.getRightClicked().getType().name().toLowerCase(Locale.ROOT);
+
+        if (!event.getPlayer().hasPermission("vessel.capture." + entityType)
+                && !event.getPlayer().hasPermission("vessel.capture.*")) {
+            messageUtils.send(
+                    event.getPlayer(),
+                    config.getMessageConfig().general.cannotCaptureEntity,
+                    messageUtils.tag("entity_type", entityType));
+            return;
+        }
+
         if (plugin.getCooldownHandler()
                 .isOnCooldown(event.getPlayer().getUniqueId(), config.getMainConfig().cooldown)) {
             return;
         }
 
-        String entityType = event.getRightClicked().getType().toString();
         boolean blacklisted = (isConsumable
                         && config.getMainConfig()
                                 .modules

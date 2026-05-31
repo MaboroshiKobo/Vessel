@@ -35,6 +35,15 @@ public class MessageConfig {
 
         @Configuration
         public static class GeneralMessages {
+            @Comment("Message shown when a player lacks permission to use a vessel.")
+            public String cannotUseVessel = "<red>You cannot use this vessel!</red>";
+
+            @Comment("Message shown when a player lacks permission to capture this entity. Supports <entity_type>.")
+            public String cannotCaptureEntity = "<red>You cannot capture <entity_type>!</red>";
+
+            @Comment("Message shown when a player lacks permission to release this entity. Supports <entity_type>.")
+            public String cannotReleaseEntity = "<red>You cannot release <entity_type>!</red>";
+
             @Comment("Message shown when a player tries to capture a blacklisted entity.")
             public String cannotCapture = "<red>You cannot capture this entity!</red>";
 

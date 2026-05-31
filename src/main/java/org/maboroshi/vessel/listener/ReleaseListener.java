@@ -1,5 +1,6 @@
 package org.maboroshi.vessel.listener;
 
+import java.util.Locale;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.EntitySnapshot;
@@ -86,6 +87,21 @@ public class ReleaseListener implements Listener {
                 handMeta.getPersistentDataContainer().get(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING);
 
         EntitySnapshot snapshot = plugin.getServer().getEntityFactory().createEntitySnapshot(capturedNBT);
+
+        String entityType = snapshot.getEntityType().name().toLowerCase(Locale.ROOT);
+        if (!event.getPlayer().hasPermission("vessel.use." + vesselType)) {
+            messageUtils.send(event.getPlayer(), config.getMessageConfig().general.cannotUseVessel);
+            return;
+        }
+
+        if (!event.getPlayer().hasPermission("vessel.release." + entityType)
+                && !event.getPlayer().hasPermission("vessel.release.*")) {
+            messageUtils.send(
+                    event.getPlayer(),
+                    config.getMessageConfig().general.cannotReleaseEntity,
+                    messageUtils.tag("entity_type", entityType));
+            return;
+        }
 
         VesselReleaseEvent releaseEvent =
                 new VesselReleaseEvent(event.getPlayer(), snapshot, releaseLocation, vesselType, handItem);
