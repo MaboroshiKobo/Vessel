@@ -1,7 +1,6 @@
 package org.maboroshi.vessel.listener;
 
 import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntitySnapshot;
@@ -20,9 +19,10 @@ import org.maboroshi.vessel.handler.EffectHandler;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
+import org.maboroshi.vessel.util.NamespacedKeys;
 
 public class ReleaseListener implements Listener {
-    private static final long RELEASE_LOCK_MS = 500L;
+    public static final long RELEASE_LOCK_MS = 500L;
 
     private final Vessel plugin;
     private final ConfigManager config;
@@ -60,15 +60,13 @@ public class ReleaseListener implements Listener {
         }
 
         ItemMeta handMeta = handItem.getItemMeta();
-        NamespacedKey typeKey = new NamespacedKey(plugin, "vessel_type");
-        NamespacedKey capturedKey = new NamespacedKey(plugin, "captured_entity");
 
-        if (!handMeta.getPersistentDataContainer().has(typeKey, PersistentDataType.STRING)) {
+        if (!handMeta.getPersistentDataContainer().has(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING)) {
             log.debug("Ignored interaction: Hand item has no vessel type");
             return;
         }
 
-        String capturedNBT = handMeta.getPersistentDataContainer().get(capturedKey, PersistentDataType.STRING);
+        String capturedNBT = handMeta.getPersistentDataContainer().get(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING);
         if (capturedNBT == null) {
             log.debug("Ignored interaction: Captured entity NBT is null");
             return;
@@ -91,7 +89,7 @@ public class ReleaseListener implements Listener {
         EntitySnapshot snapshot = plugin.getServer().getEntityFactory().createEntitySnapshot(capturedNBT);
         Entity releasedEntity = snapshot.createEntity(releaseLocation);
 
-        String vesselType = handMeta.getPersistentDataContainer().get(typeKey, PersistentDataType.STRING);
+        String vesselType = handMeta.getPersistentDataContainer().get(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING);
 
         if ("consumable".equals(vesselType)) {
             effectHandler.playEffects(
@@ -100,7 +98,7 @@ public class ReleaseListener implements Listener {
         } else if ("reusable".equals(vesselType)) {
             effectHandler.playEffects(
                     config.getMainConfig().modules.reusable.releaseEffects, releasedEntity.getLocation(), false);
-            handMeta.getPersistentDataContainer().remove(capturedKey);
+            handMeta.getPersistentDataContainer().remove(NamespacedKeys.CAPTURED_ENTITY);
             ItemHandler.applyText(
                     handMeta,
                     config.getMainConfig().modules.reusable.displayName,

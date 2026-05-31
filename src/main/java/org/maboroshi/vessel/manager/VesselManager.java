@@ -1,21 +1,19 @@
 package org.maboroshi.vessel.manager;
 
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.config.ConfigManager;
 import org.maboroshi.vessel.handler.ItemHandler;
+import org.maboroshi.vessel.util.NamespacedKeys;
 
 public class VesselManager {
     private final ConfigManager config;
-    private final NamespacedKey typeKey;
 
     public VesselManager(Vessel plugin) {
         this.config = plugin.getConfigManager();
-        this.typeKey = new NamespacedKey(plugin, "vessel_type");
     }
 
     /**
@@ -40,7 +38,7 @@ public class VesselManager {
                     config.getMainConfig().modules.consumable.displayName,
                     config.getMainConfig().modules.consumable.lore);
 
-            meta.getPersistentDataContainer().set(typeKey, PersistentDataType.STRING, "consumable");
+            meta.getPersistentDataContainer().set(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING, "consumable");
             item.setItemMeta(meta);
             return item;
 
@@ -60,7 +58,7 @@ public class VesselManager {
                     config.getMainConfig().modules.reusable.displayName,
                     config.getMainConfig().modules.reusable.lore);
 
-            meta.getPersistentDataContainer().set(typeKey, PersistentDataType.STRING, "reusable");
+            meta.getPersistentDataContainer().set(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING, "reusable");
             item.setItemMeta(meta);
             return item;
         }

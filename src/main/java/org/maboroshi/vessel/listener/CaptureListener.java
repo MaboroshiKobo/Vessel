@@ -1,7 +1,6 @@
 package org.maboroshi.vessel.listener;
 
 import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntitySnapshot;
 import org.bukkit.event.EventHandler;
@@ -17,6 +16,7 @@ import org.maboroshi.vessel.handler.EffectHandler;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
+import org.maboroshi.vessel.util.NamespacedKeys;
 
 public class CaptureListener implements Listener {
     private final Vessel plugin;
@@ -41,18 +41,16 @@ public class CaptureListener implements Listener {
         }
 
         ItemMeta handMeta = handItem.getItemMeta();
-        NamespacedKey typeKey = new NamespacedKey(plugin, "vessel_type");
-        NamespacedKey capturedKey = new NamespacedKey(plugin, "captured_entity");
 
-        if (!handMeta.getPersistentDataContainer().has(typeKey, PersistentDataType.STRING)) {
+        if (!handMeta.getPersistentDataContainer().has(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING)) {
             return;
         }
 
-        if (handMeta.getPersistentDataContainer().has(capturedKey, PersistentDataType.STRING)) {
+        if (handMeta.getPersistentDataContainer().has(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING)) {
             return;
         }
 
-        String tier = handMeta.getPersistentDataContainer().get(typeKey, PersistentDataType.STRING);
+        String tier = handMeta.getPersistentDataContainer().get(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING);
         boolean isConsumable = "consumable".equals(tier) && config.getMainConfig().modules.consumable.enabled;
         boolean isReusable = "reusable".equals(tier) && config.getMainConfig().modules.reusable.enabled;
 
@@ -100,7 +98,7 @@ public class CaptureListener implements Listener {
         Location captureLocation = target.getLocation();
 
         EntitySnapshot snapshot = target.createSnapshot();
-        captureMeta.getPersistentDataContainer().set(capturedKey, PersistentDataType.STRING, snapshot.getAsString());
+        captureMeta.getPersistentDataContainer().set(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING, snapshot.getAsString());
 
         if (isConsumable) {
             ItemHandler.applyText(
