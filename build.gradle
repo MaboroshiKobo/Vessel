@@ -13,6 +13,7 @@ repositories {
     maven { url = 'https://repo.papermc.io/repository/maven-public/' }
     maven { url = 'https://repo.panda-lang.org/releases' }
     maven { url = 'https://repo.extendedclip.com/releases/' }
+    maven { url = 'https://repo.nexomc.com/releases' }
 }
 
 dependencies {
@@ -21,6 +22,7 @@ dependencies {
     compileOnly("dev.rollczi:litecommands-bukkit:3.10.9")
     implementation("org.bstats:bstats-bukkit:3.2.1")
     compileOnly("me.clip:placeholderapi:2.12.2")
+    compileOnly("com.nexomc:nexo:1.23")
 }
 
 tasks.named('shadowJar') {

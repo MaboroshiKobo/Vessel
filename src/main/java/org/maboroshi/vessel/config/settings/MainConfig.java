@@ -53,7 +53,7 @@ public class MainConfig {
         @Comment("Enable or disable the use of consumable vessels.")
         public boolean enabled = true;
 
-        @Comment("The material ID for the consumable vessel item.")
+        @Comment({"The material ID for the consumable vessel item.", "Nexo custom items are supported."})
         public String item = "amethyst_shard";
 
         @Comment("Display name for the empty consumable vessel component.")
@@ -82,7 +82,7 @@ public class MainConfig {
         @Comment("Enable or disable the use of reusable vessels.")
         public boolean enabled = true;
 
-        @Comment("The material ID for the reusable vessel item.")
+        @Comment({"The material ID for the reusable vessel item.", "Nexo custom items are supported."})
         public String item = "echo_shard";
 
         @Comment("Display name for the empty reusable vessel component.")
@@ -135,7 +135,9 @@ public class MainConfig {
                         new HashMap<>(Map.of("capture_effect", new SoundEffect("entity.item.pickup", 1f, 1f))),
                         new HashMap<>()),
                 new HashMap<>(Map.of(
-                        "capture_action", new CommandAction(100.0, List.of("say <player> captured an entity!")))));
+                        "capture_action",
+                        new CommandAction(
+                                100.0, List.of("msg <player> You captured <entity_name> of type <entity_type>!")))));
 
         @Comment("Release event settings for this module")
         public VesselEvent release = new VesselEvent(
@@ -144,6 +146,8 @@ public class MainConfig {
                         new HashMap<>(Map.of("release_effect", new SoundEffect("entity.item.break", 1f, 1f))),
                         new HashMap<>()),
                 new HashMap<>(Map.of(
-                        "release_action", new CommandAction(100.0, List.of("say <player> released an entity!")))));
+                        "release_action",
+                        new CommandAction(
+                                100.0, List.of("msg <player> You released <entity_name> of type <entity_type>!")))));
     }
 }

@@ -1,5 +1,9 @@
 package org.maboroshi.vessel.manager;
 
+import com.nexomc.nexo.api.NexoItems;
+import com.nexomc.nexo.items.ItemBuilder;
+import java.util.Locale;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -25,11 +29,8 @@ public class VesselManager {
         if ("consumable".equalsIgnoreCase(type)) {
             if (!config.getMainConfig().modules.consumable.enabled) return null;
 
-            Material mat = Material.matchMaterial(
-                    config.getMainConfig().modules.consumable.item.toUpperCase());
-            if (mat == null) mat = Material.AMETHYST_SHARD;
-
-            ItemStack item = new ItemStack(mat);
+            ItemStack item =
+                    resolveConfiguredItem(config.getMainConfig().modules.consumable.item, Material.AMETHYST_SHARD);
             ItemMeta meta = item.getItemMeta();
             if (meta == null) return null;
 
@@ -45,11 +46,7 @@ public class VesselManager {
         } else if ("reusable".equalsIgnoreCase(type)) {
             if (!config.getMainConfig().modules.reusable.enabled) return null;
 
-            Material mat = Material.matchMaterial(
-                    config.getMainConfig().modules.reusable.item.toUpperCase());
-            if (mat == null) mat = Material.ECHO_SHARD;
-
-            ItemStack item = new ItemStack(mat);
+            ItemStack item = resolveConfiguredItem(config.getMainConfig().modules.reusable.item, Material.ECHO_SHARD);
             ItemMeta meta = item.getItemMeta();
             if (meta == null) return null;
 
@@ -64,5 +61,24 @@ public class VesselManager {
         }
 
         return null;
+    }
+
+    private ItemStack resolveConfiguredItem(String configuredItem, Material fallback) {
+        String itemId = configuredItem == null ? "" : configuredItem.trim();
+        if (!itemId.isEmpty()) {
+            Material material = Material.matchMaterial(itemId.toUpperCase(Locale.ROOT));
+            if (material != null) {
+                return new ItemStack(material);
+            }
+
+            if (Bukkit.getPluginManager().isPluginEnabled("Nexo")) {
+                ItemStack nexoItem = NexoItems.optionalItemFromId(itemId)
+                        .map(ItemBuilder::build)
+                        .orElse(null);
+                if (nexoItem != null) return nexoItem;
+            }
+        }
+
+        return new ItemStack(fallback);
     }
 }
