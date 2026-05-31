@@ -11,12 +11,14 @@ version = '1.0.0'
 repositories {
     mavenCentral()
     maven { url = 'https://repo.papermc.io/repository/maven-public/' }
+    maven { url = 'https://repo.panda-lang.org/releases' }
     maven { url = 'https://repo.extendedclip.com/releases/' }
 }
 
 dependencies {
     paperweight.paperDevBundle("26.1.2.build.+")
     compileOnly("de.exlll:configlib-paper:4.8.1")
+    compileOnly("dev.rollczi:litecommands-bukkit:3.10.9")
     implementation("org.bstats:bstats-bukkit:3.2.1")
     compileOnly("me.clip:placeholderapi:2.12.2")
 }
@@ -36,6 +38,7 @@ java {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    options.compilerArgs.add("-parameters")
 }
 
 processResources {
@@ -57,7 +60,7 @@ spotless {
 
   java {
     target 'src/*/java/**/*.java'
-    palantirJavaFormat('2.90.0')
+    palantirJavaFormat('2.91.0')
     formatAnnotations()
     importOrder()
     removeUnusedImports()
