@@ -2,7 +2,6 @@ package org.maboroshi.vessel.listener;
 
 import org.bukkit.Location;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntitySnapshot;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,7 +15,6 @@ import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.api.event.VesselReleaseEvent;
 import org.maboroshi.vessel.config.ConfigManager;
 import org.maboroshi.vessel.handler.CooldownHandler;
-import org.maboroshi.vessel.handler.EffectHandler;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
@@ -26,7 +24,6 @@ public class ReleaseListener implements Listener {
     private final Vessel plugin;
     private final ConfigManager config;
     private final Logger log;
-    private final EffectHandler effectHandler;
     private final CooldownHandler cooldownHandler;
     private final MessageUtils messageUtils;
 
@@ -34,7 +31,6 @@ public class ReleaseListener implements Listener {
         this.plugin = plugin;
         this.config = plugin.getConfigManager();
         this.log = plugin.getPluginLogger();
-        this.effectHandler = plugin.getEffectHandler();
         this.cooldownHandler = plugin.getCooldownHandler();
         this.messageUtils = plugin.getMessageUtils();
     }
@@ -99,45 +95,18 @@ public class ReleaseListener implements Listener {
             return;
         }
 
-        Entity releasedEntity = snapshot.createEntity(releaseLocation);
+        snapshot.createEntity(releaseLocation);
 
         if ("consumable".equals(vesselType)) {
-            effectHandler.playEffects(
-                    config.getMainConfig().modules.consumable.events.release.effects,
-                    releasedEntity.getLocation(),
-                    false);
             handItem.setAmount(handItem.getAmount() - 1);
-            plugin.getActionHandler()
-                    .process(
-                            event.getPlayer(),
-                            config.getMainConfig()
-                                    .modules
-                                    .consumable
-                                    .events
-                                    .release
-                                    .actions
-                                    .values());
         } else if ("reusable".equals(vesselType)) {
-            effectHandler.playEffects(
-                    config.getMainConfig().modules.reusable.events.release.effects,
-                    releasedEntity.getLocation(),
-                    false);
             handMeta.getPersistentDataContainer().remove(NamespacedKeys.CAPTURED_ENTITY);
+            handMeta.getPersistentDataContainer().remove(NamespacedKeys.VESSEL_ID);
             ItemHandler.applyText(
                     handMeta,
                     config.getMainConfig().modules.reusable.displayName,
                     config.getMainConfig().modules.reusable.lore);
             handItem.setItemMeta(handMeta);
-            plugin.getActionHandler()
-                    .process(
-                            event.getPlayer(),
-                            config.getMainConfig()
-                                    .modules
-                                    .reusable
-                                    .events
-                                    .release
-                                    .actions
-                                    .values());
         }
     }
 

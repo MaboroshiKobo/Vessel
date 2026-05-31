@@ -16,6 +16,7 @@ import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
 import org.maboroshi.vessel.util.NamespacedKeys;
+import java.util.UUID;
 
 public class CaptureListener implements Listener {
     private final Vessel plugin;
@@ -99,6 +100,9 @@ public class CaptureListener implements Listener {
         captureMeta
                 .getPersistentDataContainer()
                 .set(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING, snapshot.getAsString());
+        captureMeta
+            .getPersistentDataContainer()
+            .set(NamespacedKeys.VESSEL_ID, PersistentDataType.STRING, UUID.randomUUID().toString());
 
         if (isConsumable) {
             ItemHandler.applyText(

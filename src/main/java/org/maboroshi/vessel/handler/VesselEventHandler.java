@@ -24,17 +24,6 @@ public class VesselEventHandler implements Listener {
 
         String vesselType = event.getVesselType();
         if ("consumable".equals(vesselType)) {
-            effectHandler.playEffects(
-                    config.getMainConfig().modules.consumable.events.capture.effects, event.getLocation(), false);
-            actionHandler.process(
-                    event.getPlayer(),
-                    config.getMainConfig()
-                            .modules
-                            .consumable
-                            .events
-                            .capture
-                            .actions
-                            .values());
             if (config.getMainConfig().modules.consumable.events.capture != null
                     && config.getMainConfig().modules.consumable.events.capture.enabled) {
                 effectHandler.playEffects(
@@ -50,17 +39,6 @@ public class VesselEventHandler implements Listener {
                                 .values());
             }
         } else if ("reusable".equals(vesselType)) {
-            effectHandler.playEffects(
-                    config.getMainConfig().modules.reusable.events.capture.effects, event.getLocation(), false);
-            actionHandler.process(
-                    event.getPlayer(),
-                    config.getMainConfig()
-                            .modules
-                            .reusable
-                            .events
-                            .capture
-                            .actions
-                            .values());
             if (config.getMainConfig().modules.reusable.events.capture != null
                     && config.getMainConfig().modules.reusable.events.capture.enabled) {
                 effectHandler.playEffects(
@@ -84,17 +62,6 @@ public class VesselEventHandler implements Listener {
 
         String vesselType = event.getVesselType();
         if ("consumable".equals(vesselType)) {
-            effectHandler.playEffects(
-                    config.getMainConfig().modules.consumable.events.release.effects, event.getLocation(), false);
-            actionHandler.process(
-                    event.getPlayer(),
-                    config.getMainConfig()
-                            .modules
-                            .consumable
-                            .events
-                            .release
-                            .actions
-                            .values());
             if (config.getMainConfig().modules.consumable.events.release != null
                     && config.getMainConfig().modules.consumable.events.release.enabled) {
                 effectHandler.playEffects(
@@ -110,17 +77,6 @@ public class VesselEventHandler implements Listener {
                                 .values());
             }
         } else if ("reusable".equals(vesselType)) {
-            effectHandler.playEffects(
-                    config.getMainConfig().modules.reusable.events.release.effects, event.getLocation(), false);
-            actionHandler.process(
-                    event.getPlayer(),
-                    config.getMainConfig()
-                            .modules
-                            .reusable
-                            .events
-                            .release
-                            .actions
-                            .values());
             if (config.getMainConfig().modules.reusable.events.release != null
                     && config.getMainConfig().modules.reusable.events.release.enabled) {
                 effectHandler.playEffects(
