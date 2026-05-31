@@ -38,14 +38,26 @@ public class MessageConfig {
             @Comment("Message shown when a player lacks permission to use a vessel.")
             public String cannotUseVessel = "<red>You cannot use this vessel!</red>";
 
-            @Comment("Message shown when a player lacks permission to capture this entity. Supports <entity_type>.")
+            @Comment("Message shown when a player lacks permission to capture this entity.")
             public String cannotCapture = "<red>You cannot capture <entity_type>!</red>";
 
-            @Comment("Message shown when a player lacks permission to release this entity. Supports <entity_type>.")
+            @Comment("Message shown when a player lacks permission to release this entity.")
             public String cannotRelease = "<red>You cannot release <entity_type>!</red>";
 
+            @Comment("Message shown when a player tries to capture another player's tamed pet.")
+            public String cannotCaptureTamed = "<red>You cannot capture someone else's pet!</red>";
+
+            @Comment("Message shown when a player tries to release a tamed mob that is excluded.")
+            public String cannotReleaseTamed = "<red>You cannot release this pet!</red>";
+
+            @Comment("Message shown when a player tries to capture a named mob while named mobs are excluded.")
+            public String cannotCaptureNamed = "<red>You cannot capture this named mob!</red>";
+
+            @Comment("Message shown when a player tries to release a named mob while named mobs are excluded.")
+            public String cannotReleaseNamed = "<red>You cannot release this named mob!</red>";
+
             @Comment(
-                    "Message shown when a player attempts to use the vessel on a blacklisted entity. Supports <entity_type>.")
+                    "Message shown when a player attempts to use the vessel on a blacklisted entity.")
             public String blacklistedMob = "<red>You cannot use the vessel on <entity_type>!</red>";
 
             @Comment("Message shown when a player cannot capture in the current protected area.")
@@ -63,7 +75,7 @@ public class MessageConfig {
             @Comment("Message shown when reload succeeds.")
             public String reloadSuccess = "<green>Vessel configuration reloaded.</green>";
 
-            @Comment("Message shown when reload fails. Supports <error> tag.")
+            @Comment("Message shown when reload fails.")
             public String reloadFail = "<red>Failed to reload configuration: <error></red>";
         }
 
@@ -79,8 +91,8 @@ public class MessageConfig {
             @Comment("Invalid amount message. Supports <min> and <max> tags.")
             public String invalidAmount = "<red>Amount must be between <min> and <max>.</red>";
 
-            @Comment("Message sent to command sender when giving vessels. Supports <player>, <amount>, <type> tags.")
-            public String giveSender = "<green>Gave <player> <amount> <type> vessel(s).</green>";
+            @Comment("Message sent to command sender when giving vessels. Supports <target>, <amount>, <type> tags.")
+            public String giveSender = "<green>Gave <target> <amount> <type> vessel(s).</green>";
 
             @Comment("Message sent to player when receiving vessels. Supports <amount>, <type> tags.")
             public String givePlayer = "<green>You received <amount> <type> vessel(s).</green>";

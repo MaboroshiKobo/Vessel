@@ -55,6 +55,9 @@ public class MainConfig {
         @Comment("Enable or disable the use of consumable vessels.")
         public boolean enabled = true;
 
+        @Comment("Exclude certain mobs from consumable vessel capture and release logic.")
+        public ExclusionConfiguration exclusions = new ExclusionConfiguration();
+
         @Comment("World filter for consumable vessels.")
         public FilterConfiguration worlds = new FilterConfiguration();
 
@@ -87,6 +90,9 @@ public class MainConfig {
         @Comment("Enable or disable the use of reusable vessels.")
         public boolean enabled = true;
 
+        @Comment("Exclude certain mobs from reusable vessel capture and release logic.")
+        public ExclusionConfiguration exclusions = new ExclusionConfiguration();
+
         @Comment("World filter for reusable vessels.")
         public FilterConfiguration worlds = new FilterConfiguration();
 
@@ -112,6 +118,15 @@ public class MainConfig {
 
         @Comment("Event configuration")
         public ModuleEvents events = new ModuleEvents();
+    }
+
+    @Configuration
+    public static class ExclusionConfiguration {
+        @Comment("Should tamed mobs be excluded from capture?")
+        public boolean tamed = true;
+
+        @Comment("Should named mobs be excluded from capture?")
+        public boolean named = false;
     }
 
     @Configuration

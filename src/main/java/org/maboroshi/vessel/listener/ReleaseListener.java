@@ -4,8 +4,10 @@ import java.util.Locale;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntitySnapshot;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Tameable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -69,6 +71,8 @@ public class ReleaseListener implements Listener {
         if (capturedNBT == null || capturedNBT.isEmpty()) {
             return;
         }
+        String capturedEntityName = handMeta.getPersistentDataContainer()
+                .get(NamespacedKeys.CAPTURED_ENTITY_NAME, PersistentDataType.STRING);
 
         event.setCancelled(true);
 
@@ -82,6 +86,9 @@ public class ReleaseListener implements Listener {
 
         MainConfig.ConsumableConfiguration consumableConfig = config.getMainConfig().modules.consumable;
         MainConfig.ReusableConfiguration reusableConfig = config.getMainConfig().modules.reusable;
+        MainConfig.ExclusionConfiguration exclusions = "consumable".equals(vesselType)
+            ? consumableConfig.exclusions
+            : reusableConfig.exclusions;
         FilterConfiguration worldFilter =
                 "consumable".equals(vesselType) ? consumableConfig.worlds : reusableConfig.worlds;
 
@@ -117,16 +124,40 @@ public class ReleaseListener implements Listener {
             return;
         }
 
-        VesselReleaseEvent releaseEvent =
-                new VesselReleaseEvent(player, snapshot, releaseLocation, vesselType, handItem);
+        VesselReleaseEvent releaseEvent = new VesselReleaseEvent(
+                player,
+                snapshot,
+                releaseLocation,
+                vesselType,
+                capturedEntityName != null ? capturedEntityName : entityType,
+                handItem);
         plugin.getServer().getPluginManager().callEvent(releaseEvent);
 
         if (releaseEvent.isCancelled()) {
             return;
         }
 
+        Entity releasedEntity = snapshot.createEntity(releaseLocation);
+        if (releasedEntity == null) {
+            return;
+        }
+
+        if (exclusions.tamed && releasedEntity instanceof Tameable tameable && tameable.isTamed()) {
+            releasedEntity.remove();
+            messageUtils.send(player, config.getMessageConfig().general.cannotReleaseTamed);
+            return;
+        }
+
+        if (exclusions.named && releasedEntity.customName() != null) {
+            releasedEntity.remove();
+            messageUtils.send(
+                    player,
+                    config.getMessageConfig().general.cannotReleaseNamed,
+                    messageUtils.tag("entity_type", entityType));
+            return;
+        }
+
         cooldownHandler.setCooldown(player.getUniqueId());
-        snapshot.createEntity(releaseLocation);
 
         if ("consumable".equals(vesselType)) {
             handItem.setAmount(handItem.getAmount() - 1);
@@ -137,6 +168,7 @@ public class ReleaseListener implements Listener {
             ItemMeta emptyMeta = emptyVessel.getItemMeta();
 
             emptyMeta.getPersistentDataContainer().remove(NamespacedKeys.CAPTURED_ENTITY);
+            emptyMeta.getPersistentDataContainer().remove(NamespacedKeys.CAPTURED_ENTITY_NAME);
             emptyMeta.getPersistentDataContainer().remove(NamespacedKeys.VESSEL_ID);
             ItemHandler.applyText(
                     emptyMeta,

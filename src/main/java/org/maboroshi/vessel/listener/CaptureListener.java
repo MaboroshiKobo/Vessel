@@ -7,6 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntitySnapshot;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Tameable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -99,6 +100,23 @@ public class CaptureListener implements Listener {
 
         String entityType = target.getType().name().toLowerCase(Locale.ROOT);
 
+        MainConfig.ExclusionConfiguration exclusions = isConsumable
+                ? consumableConfig.exclusions
+                : reusableConfig.exclusions;
+
+        if (exclusions.tamed && target instanceof Tameable tameable && tameable.isTamed()) {
+            messageUtils.send(player, config.getMessageConfig().general.cannotCaptureTamed);
+            return;
+        }
+
+        if (exclusions.named && target.customName() != null) {
+            messageUtils.send(
+                    player,
+                    config.getMessageConfig().general.cannotCaptureNamed,
+                    messageUtils.tag("entity_type", entityType));
+            return;
+        }
+
         FilterConfiguration entityFilter = isConsumable ? consumableConfig.entities : reusableConfig.entities;
 
         if (!isAllowed(entityType, entityFilter)) {
@@ -128,9 +146,14 @@ public class CaptureListener implements Listener {
         ItemMeta captureMeta = captureItem.getItemMeta();
 
         EntitySnapshot snapshot = target.createSnapshot();
+        String safeEntityName =
+                target.getName() != null ? target.getName() : target.getType().toString();
         captureMeta
                 .getPersistentDataContainer()
                 .set(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING, snapshot.getAsString());
+        captureMeta
+                .getPersistentDataContainer()
+                .set(NamespacedKeys.CAPTURED_ENTITY_NAME, PersistentDataType.STRING, safeEntityName);
         captureMeta
                 .getPersistentDataContainer()
                 .set(
@@ -144,8 +167,6 @@ public class CaptureListener implements Listener {
         List<String> filledLore = isConsumable
                 ? config.getMainConfig().modules.consumable.filledLore
                 : config.getMainConfig().modules.reusable.filledLore;
-        String safeEntityName =
-                target.getName() != null ? target.getName() : target.getType().toString();
 
         ItemHandler.applyText(
                 captureMeta,
@@ -157,7 +178,8 @@ public class CaptureListener implements Listener {
 
         captureItem.setItemMeta(captureMeta);
 
-        VesselCaptureEvent captureEvent = new VesselCaptureEvent(player, snapshot, captureLocation, tier, captureItem);
+        VesselCaptureEvent captureEvent =
+                new VesselCaptureEvent(player, snapshot, captureLocation, tier, safeEntityName, captureItem);
         plugin.getServer().getPluginManager().callEvent(captureEvent);
 
         if (captureEvent.isCancelled()) {

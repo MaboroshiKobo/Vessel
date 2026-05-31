@@ -16,14 +16,21 @@ public class VesselReleaseEvent extends Event implements Cancellable {
     private final EntitySnapshot snapshot;
     private final Location location;
     private final String vesselType;
+    private final String entityName;
     private final ItemStack vesselItem;
 
     public VesselReleaseEvent(
-            Player player, EntitySnapshot snapshot, Location location, String vesselType, ItemStack vesselItem) {
+            Player player,
+            EntitySnapshot snapshot,
+            Location location,
+            String vesselType,
+            String entityName,
+            ItemStack vesselItem) {
         this.player = player;
         this.snapshot = snapshot;
         this.location = location;
         this.vesselType = vesselType;
+        this.entityName = entityName;
         this.vesselItem = vesselItem;
     }
 
@@ -60,6 +67,10 @@ public class VesselReleaseEvent extends Event implements Cancellable {
 
     public String getVesselType() {
         return vesselType;
+    }
+
+    public String getEntityName() {
+        return entityName;
     }
 
     public ItemStack getVesselItem() {

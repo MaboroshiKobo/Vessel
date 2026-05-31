@@ -1,7 +1,9 @@
 package org.maboroshi.vessel.handler;
 
+import java.util.Locale;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.EntitySnapshot;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.maboroshi.vessel.Vessel;
@@ -26,7 +28,13 @@ public class VesselEventHandler implements Listener {
         String vesselType = event.getVesselType();
         MainConfig.ModuleEvents moduleEvents = moduleEventsForType(vesselType);
         if (moduleEvents == null) return;
-        runModuleEvent(moduleEvents.capture, event.getLocation(), event.getPlayer());
+        runModuleEvent(
+                moduleEvents.capture,
+                event.getLocation(),
+                event.getPlayer(),
+                event.getEntityName(),
+                event.getSnapshot(),
+                vesselType);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -34,7 +42,13 @@ public class VesselEventHandler implements Listener {
         String vesselType = event.getVesselType();
         MainConfig.ModuleEvents moduleEvents = moduleEventsForType(vesselType);
         if (moduleEvents == null) return;
-        runModuleEvent(moduleEvents.release, event.getLocation(), event.getPlayer());
+        runModuleEvent(
+                moduleEvents.release,
+                event.getLocation(),
+                event.getPlayer(),
+                event.getEntityName(),
+                event.getSnapshot(),
+                vesselType);
     }
 
     private MainConfig.ModuleEvents moduleEventsForType(String vesselType) {
@@ -45,9 +59,33 @@ public class VesselEventHandler implements Listener {
         };
     }
 
-    private void runModuleEvent(MainConfig.VesselEvent event, Location location, OfflinePlayer player) {
+    private void runModuleEvent(
+            MainConfig.VesselEvent event,
+            Location location,
+            OfflinePlayer player,
+            String entityName,
+            EntitySnapshot snapshot,
+            String vesselType) {
         if (event == null || !event.enabled) return;
         effectHandler.playEffects(event.effects, location, false);
-        actionHandler.process(player, event.actions.values());
+        actionHandler.process(player, event.actions.values(), command -> {
+            String parsed = command;
+            String safeWorld = location != null && location.getWorld() != null
+                    ? location.getWorld().getName()
+                    : "unknown";
+            String safeEntityName = entityName != null && !entityName.isBlank()
+                    ? entityName
+                    : (snapshot != null && snapshot.getEntityType() != null
+                            ? snapshot.getEntityType().name().toLowerCase(Locale.ROOT)
+                            : "unknown");
+            String safeEntityType = snapshot != null && snapshot.getEntityType() != null
+                    ? snapshot.getEntityType().name().toLowerCase(Locale.ROOT)
+                    : "unknown";
+
+            return parsed.replace("<entity_name>", safeEntityName)
+                    .replace("<entity_type>", safeEntityType)
+                    .replace("<world>", safeWorld)
+                    .replace("<vessel_type>", vesselType);
+        });
     }
 }
