@@ -112,22 +112,30 @@ public class MainConfig {
         public boolean enabled = true;
 
         @Comment("Visual/Audio effects to play when this event triggers.")
-        public EffectGroup effects = new EffectGroup(
-                new HashMap<>(Map.of("notification", new SoundEffect("block.note_block.pling", 1f, 1f))),
-                new HashMap<>());
+        public EffectGroup effects = new EffectGroup();
 
         @Comment("Actions that execute when the event triggers.")
         public Map<String, CommandAction> actions = new HashMap<>();
 
         public VesselEvent() {}
+
+        public VesselEvent(boolean enabled, EffectGroup effects, Map<String, CommandAction> actions) {
+            this.enabled = enabled;
+            this.effects = effects;
+            this.actions = actions;
+        }
     }
 
     @Configuration
     public static class ModuleEvents {
         @Comment("Capture event settings for this module")
-        public VesselEvent capture = new VesselEvent();
+        public VesselEvent capture = new VesselEvent(true, new EffectGroup(
+                new HashMap<>(Map.of("capture_effect", new SoundEffect("entity.item.pickup", 1f, 1f))),
+                new HashMap<>()), new HashMap<>(Map.of("capture_action", new CommandAction(100.0, List.of("say <player> captured an entity!")))));
 
         @Comment("Release event settings for this module")
-        public VesselEvent release = new VesselEvent();
+        public VesselEvent release = new VesselEvent(true, new EffectGroup(
+                new HashMap<>(Map.of("release_effect", new SoundEffect("entity.item.break", 1f, 1f))),
+                new HashMap<>()), new HashMap<>(Map.of("release_action", new CommandAction(100.0, List.of("say <player> released an entity!")))));
     }
 }
