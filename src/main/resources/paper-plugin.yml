@@ -6,11 +6,18 @@ description: A highly customizable Minecraft plugin for containing mobs in a ves
 author: Maboroshi
 website: https://github.com/MaboroshiKobo/Vessel
 api-version: "26.1"
+folia-supported: true
 dependencies:
   server:
     PlaceholderAPI:
       load: BEFORE
       required: false
     Nexo:
+      load: BEFORE
+      required: false
+    WorldGuard:
+      load: BEFORE
+      required: false
+    Towny:
       load: BEFORE
       required: false

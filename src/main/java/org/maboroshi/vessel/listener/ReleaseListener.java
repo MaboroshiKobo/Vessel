@@ -3,7 +3,9 @@ package org.maboroshi.vessel.listener;
 import java.util.Locale;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntitySnapshot;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -15,6 +17,9 @@ import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.api.event.VesselReleaseEvent;
 import org.maboroshi.vessel.config.ConfigManager;
+import org.maboroshi.vessel.config.settings.MainConfig;
+import org.maboroshi.vessel.config.settings.MainConfig.FilterConfiguration;
+import org.maboroshi.vessel.config.settings.MainConfig.FilterMode;
 import org.maboroshi.vessel.handler.CooldownHandler;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Logger;
@@ -39,100 +44,142 @@ public class ReleaseListener implements Listener {
     @EventHandler
     public void onRelease(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getHand() != EquipmentSlot.HAND) {
-            log.debug("Ignored interaction: Not a right-click on block or not main hand");
             return;
         }
 
         Block clickedBlock = event.getClickedBlock();
         if (clickedBlock == null) {
-            log.debug("Ignored interaction: Clicked block is null");
             return;
         }
 
-        ItemStack handItem = event.getPlayer().getInventory().getItemInMainHand();
+        Player player = event.getPlayer();
+        ItemStack handItem = player.getInventory().getItemInMainHand();
+
         if (!handItem.hasItemMeta()) {
-            log.debug("Ignored interaction: Hand item has no meta");
             return;
         }
 
         ItemMeta handMeta = handItem.getItemMeta();
-
         if (!handMeta.getPersistentDataContainer().has(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING)) {
-            log.debug("Ignored interaction: Hand item has no vessel type");
             return;
         }
 
         String capturedNBT =
                 handMeta.getPersistentDataContainer().get(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING);
-        if (capturedNBT == null) {
-            log.debug("Ignored interaction: Captured entity NBT is null");
-            return;
-        }
-
-        if (cooldownHandler.isOnCooldown(event.getPlayer().getUniqueId(), config.getMainConfig().cooldown)) {
-            event.setCancelled(true);
+        if (capturedNBT == null || capturedNBT.isEmpty()) {
             return;
         }
 
         event.setCancelled(true);
-        cooldownHandler.setCooldown(event.getPlayer().getUniqueId());
-
-        Location releaseLocation = findSafeReleaseLocation(clickedBlock);
-        if (releaseLocation == null) {
-            messageUtils.send(event.getPlayer(), "<red>There is no safe space to release this vessel.</red>");
-            return;
-        }
 
         String vesselType =
                 handMeta.getPersistentDataContainer().get(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING);
 
-        EntitySnapshot snapshot = plugin.getServer().getEntityFactory().createEntitySnapshot(capturedNBT);
-
-        String entityType = snapshot.getEntityType().name().toLowerCase(Locale.ROOT);
-        if (!event.getPlayer().hasPermission("vessel.use." + vesselType)) {
-            messageUtils.send(event.getPlayer(), config.getMessageConfig().general.cannotUseVessel);
+        if (!player.hasPermission("vessel.use." + vesselType)) {
+            messageUtils.send(player, config.getMessageConfig().general.cannotUseVessel);
             return;
         }
 
-        if (!event.getPlayer().hasPermission("vessel.release." + entityType)
-                && !event.getPlayer().hasPermission("vessel.release.*")) {
+        MainConfig.ConsumableConfiguration consumableConfig = config.getMainConfig().modules.consumable;
+        MainConfig.ReusableConfiguration reusableConfig = config.getMainConfig().modules.reusable;
+        FilterConfiguration worldFilter =
+                "consumable".equals(vesselType) ? consumableConfig.worlds : reusableConfig.worlds;
+
+        if (!isAllowed(player.getWorld().getName(), worldFilter)) {
+            messageUtils.send(player, config.getMessageConfig().general.cannotReleaseWorld);
+            return;
+        }
+
+        Location releaseLocation = findSafeReleaseLocation(clickedBlock, event.getBlockFace());
+        if (releaseLocation == null) {
+            messageUtils.send(player, "<red>There is no safe space to release this vessel.</red>");
+            return;
+        }
+
+        if (!plugin.getProtectionService().canRelease(player, releaseLocation)) {
+            messageUtils.send(player, config.getMessageConfig().general.cannotReleaseHere);
+            return;
+        }
+
+        if (cooldownHandler.isOnCooldown(player.getUniqueId(), config.getMainConfig().cooldown)) {
+            log.debug("Player " + player.getName() + " attempted to release a vessel but is on cooldown.");
+            return;
+        }
+
+        EntitySnapshot snapshot = plugin.getServer().getEntityFactory().createEntitySnapshot(capturedNBT);
+        String entityType = snapshot.getEntityType().name().toLowerCase(Locale.ROOT);
+
+        if (!player.hasPermission("vessel.release." + entityType) && !player.hasPermission("vessel.release.*")) {
             messageUtils.send(
-                    event.getPlayer(),
-                    config.getMessageConfig().general.cannotReleaseEntity,
+                    player,
+                    config.getMessageConfig().general.cannotRelease,
                     messageUtils.tag("entity_type", entityType));
             return;
         }
 
         VesselReleaseEvent releaseEvent =
-                new VesselReleaseEvent(event.getPlayer(), snapshot, releaseLocation, vesselType, handItem);
+                new VesselReleaseEvent(player, snapshot, releaseLocation, vesselType, handItem);
         plugin.getServer().getPluginManager().callEvent(releaseEvent);
 
         if (releaseEvent.isCancelled()) {
             return;
         }
 
+        cooldownHandler.setCooldown(player.getUniqueId());
         snapshot.createEntity(releaseLocation);
 
         if ("consumable".equals(vesselType)) {
             handItem.setAmount(handItem.getAmount() - 1);
+            player.getInventory().setItemInMainHand(handItem);
         } else if ("reusable".equals(vesselType)) {
-            handMeta.getPersistentDataContainer().remove(NamespacedKeys.CAPTURED_ENTITY);
-            handMeta.getPersistentDataContainer().remove(NamespacedKeys.VESSEL_ID);
+            ItemStack emptyVessel = handItem.clone();
+            emptyVessel.setAmount(1);
+            ItemMeta emptyMeta = emptyVessel.getItemMeta();
+
+            emptyMeta.getPersistentDataContainer().remove(NamespacedKeys.CAPTURED_ENTITY);
+            emptyMeta.getPersistentDataContainer().remove(NamespacedKeys.VESSEL_ID);
             ItemHandler.applyText(
-                    handMeta,
+                    emptyMeta,
                     config.getMainConfig().modules.reusable.displayName,
                     config.getMainConfig().modules.reusable.lore);
-            handItem.setItemMeta(handMeta);
+            emptyVessel.setItemMeta(emptyMeta);
+
+            if (handItem.getAmount() > 1) {
+                handItem.setAmount(handItem.getAmount() - 1);
+                player.getInventory().setItemInMainHand(handItem);
+
+                player.getInventory()
+                        .addItem(emptyVessel)
+                        .values()
+                        .forEach(leftover -> player.getWorld().dropItemNaturally(player.getLocation(), leftover));
+            } else {
+                player.getInventory().setItemInMainHand(emptyVessel);
+            }
         }
     }
 
-    private Location findSafeReleaseLocation(Block clickedBlock) {
-        Location base = clickedBlock.getLocation();
+    private boolean isAllowed(String value, FilterConfiguration filter) {
+        if (filter.mode == FilterMode.NONE) {
+            return true;
+        }
 
-        for (int yOffset = 1; yOffset <= 2; yOffset++) {
+        boolean listed = filter.values.stream().anyMatch(value::equalsIgnoreCase);
+        return filter.mode == FilterMode.WHITELIST ? listed : !listed;
+    }
+
+    private Location findSafeReleaseLocation(Block clickedBlock, BlockFace clickedFace) {
+        Block relativeBlock = clickedBlock.getRelative(clickedFace);
+        Location base = relativeBlock.getLocation().add(0.5, 0, 0.5);
+
+        if (relativeBlock.isPassable()
+                && relativeBlock.getRelative(BlockFace.UP).isPassable()) {
+            return base;
+        }
+
+        for (int yOffset = 0; yOffset <= 2; yOffset++) {
             for (int xOffset = -1; xOffset <= 1; xOffset++) {
                 for (int zOffset = -1; zOffset <= 1; zOffset++) {
-                    Location candidate = base.clone().add(0.5 + xOffset, yOffset, 0.5 + zOffset);
+                    Location candidate = base.clone().add(xOffset, yOffset, zOffset);
                     if (candidate.getBlock().isPassable()
                             && candidate.clone().add(0, 1, 0).getBlock().isPassable()) {
                         return candidate;
@@ -142,7 +189,7 @@ public class ReleaseListener implements Listener {
         }
 
         for (int yOffset = 3; yOffset <= 5; yOffset++) {
-            Location candidate = base.clone().add(0.5, yOffset, 0.5);
+            Location candidate = base.clone().add(0, yOffset, 0);
             if (candidate.getBlock().isPassable()
                     && candidate.clone().add(0, 1, 0).getBlock().isPassable()) {
                 return candidate;

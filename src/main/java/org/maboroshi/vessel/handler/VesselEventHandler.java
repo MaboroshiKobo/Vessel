@@ -1,11 +1,14 @@
 package org.maboroshi.vessel.handler;
 
+import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.api.event.VesselCaptureEvent;
 import org.maboroshi.vessel.api.event.VesselReleaseEvent;
 import org.maboroshi.vessel.config.ConfigManager;
+import org.maboroshi.vessel.config.settings.MainConfig;
 
 public class VesselEventHandler implements Listener {
     private final ConfigManager config;
@@ -18,79 +21,33 @@ public class VesselEventHandler implements Listener {
         this.actionHandler = plugin.getActionHandler();
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onCapture(VesselCaptureEvent event) {
-        if (event.isCancelled()) return;
-
         String vesselType = event.getVesselType();
-        if ("consumable".equals(vesselType)) {
-            if (config.getMainConfig().modules.consumable.events.capture != null
-                    && config.getMainConfig().modules.consumable.events.capture.enabled) {
-                effectHandler.playEffects(
-                        config.getMainConfig().modules.consumable.events.capture.effects, event.getLocation(), false);
-                actionHandler.process(
-                        event.getPlayer(),
-                        config.getMainConfig()
-                                .modules
-                                .consumable
-                                .events
-                                .capture
-                                .actions
-                                .values());
-            }
-        } else if ("reusable".equals(vesselType)) {
-            if (config.getMainConfig().modules.reusable.events.capture != null
-                    && config.getMainConfig().modules.reusable.events.capture.enabled) {
-                effectHandler.playEffects(
-                        config.getMainConfig().modules.reusable.events.capture.effects, event.getLocation(), false);
-                actionHandler.process(
-                        event.getPlayer(),
-                        config.getMainConfig()
-                                .modules
-                                .reusable
-                                .events
-                                .capture
-                                .actions
-                                .values());
-            }
-        }
+        MainConfig.ModuleEvents moduleEvents = moduleEventsForType(vesselType);
+        if (moduleEvents == null) return;
+        runModuleEvent(moduleEvents.capture, event.getLocation(), event.getPlayer());
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onRelease(VesselReleaseEvent event) {
-        if (event.isCancelled()) return;
-
         String vesselType = event.getVesselType();
-        if ("consumable".equals(vesselType)) {
-            if (config.getMainConfig().modules.consumable.events.release != null
-                    && config.getMainConfig().modules.consumable.events.release.enabled) {
-                effectHandler.playEffects(
-                        config.getMainConfig().modules.consumable.events.release.effects, event.getLocation(), false);
-                actionHandler.process(
-                        event.getPlayer(),
-                        config.getMainConfig()
-                                .modules
-                                .consumable
-                                .events
-                                .release
-                                .actions
-                                .values());
-            }
-        } else if ("reusable".equals(vesselType)) {
-            if (config.getMainConfig().modules.reusable.events.release != null
-                    && config.getMainConfig().modules.reusable.events.release.enabled) {
-                effectHandler.playEffects(
-                        config.getMainConfig().modules.reusable.events.release.effects, event.getLocation(), false);
-                actionHandler.process(
-                        event.getPlayer(),
-                        config.getMainConfig()
-                                .modules
-                                .reusable
-                                .events
-                                .release
-                                .actions
-                                .values());
-            }
-        }
+        MainConfig.ModuleEvents moduleEvents = moduleEventsForType(vesselType);
+        if (moduleEvents == null) return;
+        runModuleEvent(moduleEvents.release, event.getLocation(), event.getPlayer());
+    }
+
+    private MainConfig.ModuleEvents moduleEventsForType(String vesselType) {
+        return switch (vesselType) {
+            case "consumable" -> config.getMainConfig().modules.consumable.events;
+            case "reusable" -> config.getMainConfig().modules.reusable.events;
+            default -> null;
+        };
+    }
+
+    private void runModuleEvent(MainConfig.VesselEvent event, Location location, OfflinePlayer player) {
+        if (event == null || !event.enabled) return;
+        effectHandler.playEffects(event.effects, location, false);
+        actionHandler.process(player, event.actions.values());
     }
 }

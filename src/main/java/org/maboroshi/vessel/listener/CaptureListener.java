@@ -1,19 +1,25 @@
 package org.maboroshi.vessel.listener;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntitySnapshot;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.api.event.VesselCaptureEvent;
 import org.maboroshi.vessel.config.ConfigManager;
+import org.maboroshi.vessel.config.settings.MainConfig;
+import org.maboroshi.vessel.config.settings.MainConfig.FilterConfiguration;
+import org.maboroshi.vessel.config.settings.MainConfig.FilterMode;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
@@ -34,83 +40,92 @@ public class CaptureListener implements Listener {
 
     @EventHandler
     public void onCapture(PlayerInteractEntityEvent event) {
-        ItemStack handItem = event.getPlayer().getInventory().getItemInMainHand();
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        ItemStack handItem = player.getInventory().getItemInMainHand();
+
         if (!handItem.hasItemMeta()) {
             return;
         }
 
         ItemMeta handMeta = handItem.getItemMeta();
-
-        if (!handMeta.getPersistentDataContainer().has(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING)) {
+        if (!handMeta.getPersistentDataContainer().has(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING)
+                || handMeta.getPersistentDataContainer()
+                        .has(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING)) {
             return;
         }
 
-        if (handMeta.getPersistentDataContainer().has(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING)) {
-            return;
-        }
+        event.setCancelled(true);
 
         String tier = handMeta.getPersistentDataContainer().get(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING);
-        boolean isConsumable = "consumable".equals(tier) && config.getMainConfig().modules.consumable.enabled;
-        boolean isReusable = "reusable".equals(tier) && config.getMainConfig().modules.reusable.enabled;
+        boolean isConsumable = "consumable".equals(tier);
+        boolean isReusable = "reusable".equals(tier);
 
         if (!isConsumable && !isReusable) {
             return;
         }
 
-        if (!event.getPlayer().hasPermission("vessel.use." + tier)) {
-            messageUtils.send(event.getPlayer(), config.getMessageConfig().general.cannotUseVessel);
+        boolean isEnabled = isConsumable
+                ? config.getMainConfig().modules.consumable.enabled
+                : config.getMainConfig().modules.reusable.enabled;
+        if (!isEnabled) {
             return;
         }
 
-        String entityType = event.getRightClicked().getType().name().toLowerCase(Locale.ROOT);
+        MainConfig.ConsumableConfiguration consumableConfig = config.getMainConfig().modules.consumable;
+        MainConfig.ReusableConfiguration reusableConfig = config.getMainConfig().modules.reusable;
 
-        if (!event.getPlayer().hasPermission("vessel.capture." + entityType)
-                && !event.getPlayer().hasPermission("vessel.capture.*")) {
+        FilterConfiguration worldFilter = isConsumable ? consumableConfig.worlds : reusableConfig.worlds;
+        if (!isAllowed(player.getWorld().getName(), worldFilter)) {
+            messageUtils.send(player, config.getMessageConfig().general.cannotCaptureWorld);
+            return;
+        }
+
+        if (!player.hasPermission("vessel.use." + tier)) {
+            messageUtils.send(player, config.getMessageConfig().general.cannotUseVessel);
+            return;
+        }
+
+        Entity target = event.getRightClicked();
+        Location captureLocation = target.getLocation();
+
+        if (!plugin.getProtectionService().canCapture(player, captureLocation)) {
+            messageUtils.send(player, config.getMessageConfig().general.cannotCaptureHere);
+            return;
+        }
+
+        String entityType = target.getType().name().toLowerCase(Locale.ROOT);
+
+        FilterConfiguration entityFilter = isConsumable ? consumableConfig.entities : reusableConfig.entities;
+
+        if (!isAllowed(entityType, entityFilter)) {
+            log.debug("Player " + player.getName() + " tried to capture a disallowed entity.");
             messageUtils.send(
-                    event.getPlayer(),
-                    config.getMessageConfig().general.cannotCaptureEntity,
+                    player,
+                    config.getMessageConfig().general.blacklistedMob,
+                    messageUtils.tag("entity_type", entityType),
+                    messageUtils.tagParsed("entity_name", target.getName() != null ? target.getName() : entityType));
+            return;
+        }
+
+        if (!player.hasPermission("vessel.capture." + entityType) && !player.hasPermission("vessel.capture.*")) {
+            messageUtils.send(
+                    player,
+                    config.getMessageConfig().general.cannotCapture,
                     messageUtils.tag("entity_type", entityType));
             return;
         }
 
-        if (plugin.getCooldownHandler()
-                .isOnCooldown(event.getPlayer().getUniqueId(), config.getMainConfig().cooldown)) {
-            return;
-        }
-
-        boolean blacklisted = (isConsumable
-                        && config.getMainConfig()
-                                .modules
-                                .consumable
-                                .blacklistedMobs
-                                .contains(entityType))
-                || (isReusable
-                        && config.getMainConfig()
-                                .modules
-                                .reusable
-                                .blacklistedMobs
-                                .contains(entityType));
-
-        if (blacklisted) {
-            log.debug("Player " + event.getPlayer().getName() + " tried to capture a blacklisted entity.");
-            messageUtils.send(
-                    event.getPlayer(),
-                    config.getMessageConfig().general.cannotCapture,
-                    messageUtils.tag("entity_type", entityType),
-                    messageUtils.tagParsed(
-                            "entity_name",
-                            event.getRightClicked().getName() == null
-                                    ? ""
-                                    : event.getRightClicked().getName()));
+        if (plugin.getCooldownHandler().isOnCooldown(player.getUniqueId(), config.getMainConfig().cooldown)) {
             return;
         }
 
         ItemStack captureItem = handItem.clone();
         captureItem.setAmount(1);
         ItemMeta captureMeta = captureItem.getItemMeta();
-
-        Entity target = event.getRightClicked();
-        Location captureLocation = target.getLocation();
 
         EntitySnapshot snapshot = target.createSnapshot();
         captureMeta
@@ -123,45 +138,54 @@ public class CaptureListener implements Listener {
                         PersistentDataType.STRING,
                         UUID.randomUUID().toString());
 
-        if (isConsumable) {
-            ItemHandler.applyText(
-                    captureMeta,
-                    config.getMainConfig().modules.consumable.displayName,
-                    config.getMainConfig().modules.consumable.filledLore.stream()
-                            .map(line -> line.replace("<entity_name>", target.getName())
-                                    .replace("<entity_type>", target.getType().toString()))
-                            .toList());
-        } else {
-            ItemHandler.applyText(
-                    captureMeta,
-                    config.getMainConfig().modules.reusable.displayName,
-                    config.getMainConfig().modules.reusable.filledLore.stream()
-                            .map(line -> line.replace("<entity_name>", target.getName())
-                                    .replace("<entity_type>", target.getType().toString()))
-                            .toList());
-        }
+        String displayName = isConsumable
+                ? config.getMainConfig().modules.consumable.displayName
+                : config.getMainConfig().modules.reusable.displayName;
+        List<String> filledLore = isConsumable
+                ? config.getMainConfig().modules.consumable.filledLore
+                : config.getMainConfig().modules.reusable.filledLore;
+        String safeEntityName =
+                target.getName() != null ? target.getName() : target.getType().toString();
+
+        ItemHandler.applyText(
+                captureMeta,
+                displayName,
+                filledLore.stream()
+                        .map(line -> line.replace("<entity_name>", safeEntityName)
+                                .replace("<entity_type>", target.getType().toString()))
+                        .toList());
 
         captureItem.setItemMeta(captureMeta);
 
-        VesselCaptureEvent captureEvent =
-                new VesselCaptureEvent(event.getPlayer(), snapshot, captureLocation, tier, captureItem);
+        VesselCaptureEvent captureEvent = new VesselCaptureEvent(player, snapshot, captureLocation, tier, captureItem);
         plugin.getServer().getPluginManager().callEvent(captureEvent);
 
         if (captureEvent.isCancelled()) {
             return;
         }
 
-        handItem.setAmount(handItem.getAmount() - 1);
+        if (handItem.getAmount() > 1) {
+            handItem.setAmount(handItem.getAmount() - 1);
+            player.getInventory().setItemInMainHand(handItem);
+        } else {
+            player.getInventory().setItemInMainHand(null);
+        }
 
-        event.getPlayer()
-                .getInventory()
+        player.getInventory()
                 .addItem(captureItem)
                 .values()
-                .forEach(leftover ->
-                        event.getPlayer().getWorld().dropItem(event.getPlayer().getLocation(), leftover));
+                .forEach(leftover -> player.getWorld().dropItemNaturally(player.getLocation(), leftover));
 
         target.remove();
-        event.setCancelled(true);
-        plugin.getCooldownHandler().setCooldown(event.getPlayer().getUniqueId());
+        plugin.getCooldownHandler().setCooldown(player.getUniqueId());
+    }
+
+    private boolean isAllowed(String value, FilterConfiguration filter) {
+        if (filter.mode == FilterMode.NONE) {
+            return true;
+        }
+
+        boolean listed = filter.values.stream().anyMatch(value::equalsIgnoreCase);
+        return filter.mode == FilterMode.WHITELIST ? listed : !listed;
     }
 }

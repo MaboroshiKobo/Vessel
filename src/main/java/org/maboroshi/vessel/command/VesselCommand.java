@@ -47,7 +47,7 @@ public class VesselCommand {
             config.loadConfig();
             config.loadMessages();
             messageUtils.send(sender, config.getMessageConfig().general.reloadSuccess);
-            log.info("Configuration reloaded by " + (sender.getName() == null ? "console" : sender.getName()));
+            log.info("Configuration reloaded by " + sender.getName());
         } catch (Exception e) {
             messageUtils.send(
                     sender, config.getMessageConfig().general.reloadFail, messageUtils.tag("error", e.getMessage()));
@@ -86,19 +86,25 @@ public class VesselCommand {
             return;
         }
         item.setAmount(amount);
-        player.getInventory().addItem(item);
-        messageUtils.send(
-                sender,
-                config.getMessageConfig().commands.giveSender,
-                messageUtils.tag("player", player.getName()),
-                messageUtils.tag("amount", amount),
-                messageUtils.tag("type", type));
-        messageUtils.send(
-                player,
-                config.getMessageConfig().commands.givePlayer,
-                messageUtils.tag("amount", amount),
-                messageUtils.tag("type", type));
-        if (isSilent) {
+
+        player.getInventory()
+                .addItem(item)
+                .values()
+                .forEach(leftover -> player.getWorld().dropItemNaturally(player.getLocation(), leftover));
+
+        if (!isSilent) {
+            messageUtils.send(
+                    sender,
+                    config.getMessageConfig().commands.giveSender,
+                    messageUtils.tag("player", player.getName()),
+                    messageUtils.tag("amount", amount),
+                    messageUtils.tag("type", type));
+            messageUtils.send(
+                    player,
+                    config.getMessageConfig().commands.givePlayer,
+                    messageUtils.tag("amount", amount),
+                    messageUtils.tag("type", type));
+        } else {
             log.info("Gave " + player.getName() + " " + amount + " " + type + " vessel(s) silently.");
         }
     }

@@ -39,13 +39,26 @@ public class MessageConfig {
             public String cannotUseVessel = "<red>You cannot use this vessel!</red>";
 
             @Comment("Message shown when a player lacks permission to capture this entity. Supports <entity_type>.")
-            public String cannotCaptureEntity = "<red>You cannot capture <entity_type>!</red>";
+            public String cannotCapture = "<red>You cannot capture <entity_type>!</red>";
 
             @Comment("Message shown when a player lacks permission to release this entity. Supports <entity_type>.")
-            public String cannotReleaseEntity = "<red>You cannot release <entity_type>!</red>";
+            public String cannotRelease = "<red>You cannot release <entity_type>!</red>";
 
-            @Comment("Message shown when a player tries to capture a blacklisted entity.")
-            public String cannotCapture = "<red>You cannot capture this entity!</red>";
+            @Comment(
+                    "Message shown when a player attempts to use the vessel on a blacklisted entity. Supports <entity_type>.")
+            public String blacklistedMob = "<red>You cannot use the vessel on <entity_type>!</red>";
+
+            @Comment("Message shown when a player cannot capture in the current protected area.")
+            public String cannotCaptureHere = "<red>You cannot capture mobs here!</red>";
+
+            @Comment("Message shown when a player cannot capture in the current world.")
+            public String cannotCaptureWorld = "<red>You cannot capture mobs in <world>!</red>";
+
+            @Comment("Message shown when a player cannot release in the current protected area.")
+            public String cannotReleaseHere = "<red>You cannot release mobs here!</red>";
+
+            @Comment("Message shown when a player cannot release in the current world.")
+            public String cannotReleaseWorld = "<red>You cannot release mobs in <world>!</red>";
 
             @Comment("Message shown when reload succeeds.")
             public String reloadSuccess = "<green>Vessel configuration reloaded.</green>";

@@ -16,6 +16,8 @@ import org.maboroshi.vessel.config.objects.effects.EffectGroup;
 import org.maboroshi.vessel.config.objects.effects.SoundEffect;
 
 public class MainConfig {
+    private static final List<String> DEFAULT_ENTITY_BLACKLIST = List.of("ENDER_DRAGON", "WITHER", "WARDEN", "PLAYER");
+
     public static MainConfiguration load(File dataFolder) {
         YamlConfigurationProperties properties = ConfigLib.BUKKIT_DEFAULT_PROPERTIES.toBuilder()
                 .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
@@ -53,6 +55,12 @@ public class MainConfig {
         @Comment("Enable or disable the use of consumable vessels.")
         public boolean enabled = true;
 
+        @Comment("World filter for consumable vessels.")
+        public FilterConfiguration worlds = new FilterConfiguration();
+
+        @Comment("Entity filter for consumable vessels.")
+        public FilterConfiguration entities = new FilterConfiguration(FilterMode.BLACKLIST, DEFAULT_ENTITY_BLACKLIST);
+
         @Comment({"The material ID for the consumable vessel item.", "Nexo custom items are supported."})
         public String item = "amethyst_shard";
 
@@ -72,15 +80,18 @@ public class MainConfig {
 
         @Comment("Event configuration")
         public ModuleEvents events = new ModuleEvents();
-
-        @Comment("List of entity types that cannot be captured in consumable vessels.")
-        public List<String> blacklistedMobs = List.of("ENDER_DRAGON", "WITHER", "WARDEN", "PLAYER");
     }
 
     @Configuration
     public static class ReusableConfiguration {
         @Comment("Enable or disable the use of reusable vessels.")
         public boolean enabled = true;
+
+        @Comment("World filter for reusable vessels.")
+        public FilterConfiguration worlds = new FilterConfiguration();
+
+        @Comment("Entity filter for reusable vessels.")
+        public FilterConfiguration entities = new FilterConfiguration(FilterMode.BLACKLIST, DEFAULT_ENTITY_BLACKLIST);
 
         @Comment({"The material ID for the reusable vessel item.", "Nexo custom items are supported."})
         public String item = "echo_shard";
@@ -101,9 +112,28 @@ public class MainConfig {
 
         @Comment("Event configuration")
         public ModuleEvents events = new ModuleEvents();
+    }
 
-        @Comment("List of entity types that cannot be captured in reusable vessels.")
-        public List<String> blacklistedMobs = List.of("ENDER_DRAGON", "WITHER", "WARDEN", "PLAYER");
+    @Configuration
+    public static class FilterConfiguration {
+        @Comment({"How this filter should be interpreted.", "Accepted values: NONE, BLACKLIST, WHITELIST."})
+        public FilterMode mode = FilterMode.NONE;
+
+        @Comment("Values used by the selected filter mode.")
+        public List<String> values = List.of();
+
+        public FilterConfiguration() {}
+
+        public FilterConfiguration(FilterMode mode, List<String> values) {
+            this.mode = mode;
+            this.values = values;
+        }
+    }
+
+    public enum FilterMode {
+        NONE,
+        BLACKLIST,
+        WHITELIST
     }
 
     @Configuration

@@ -17,6 +17,7 @@ import org.maboroshi.vessel.handler.VesselEventHandler;
 import org.maboroshi.vessel.listener.CaptureListener;
 import org.maboroshi.vessel.listener.ReleaseListener;
 import org.maboroshi.vessel.manager.VesselManager;
+import org.maboroshi.vessel.protection.ProtectionService;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
 import org.maboroshi.vessel.util.NamespacedKeys;
@@ -31,6 +32,7 @@ public final class Vessel extends JavaPlugin {
     private ActionHandler actionHandler;
     private LiteCommands<CommandSender> commandManager;
     private VesselManager vesselManager;
+    private ProtectionService protectionService;
     private MessageUtils messageUtils;
 
     @Override
@@ -54,6 +56,7 @@ public final class Vessel extends JavaPlugin {
         this.cooldownHandler = new CooldownHandler();
         this.actionHandler = new ActionHandler(this);
         this.vesselManager = new VesselManager(this);
+        this.protectionService = ProtectionService.create(this);
         getServer().getPluginManager().registerEvents(new VesselEventHandler(this), this);
 
         getServer().getPluginManager().registerEvents(new CaptureListener(this), this);
@@ -110,5 +113,9 @@ public final class Vessel extends JavaPlugin {
 
     public ActionHandler getActionHandler() {
         return actionHandler;
+    }
+
+    public ProtectionService getProtectionService() {
+        return protectionService;
     }
 }
