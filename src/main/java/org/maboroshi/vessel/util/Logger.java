@@ -8,9 +8,9 @@ public class Logger {
     private final Vessel plugin;
     private final MessageUtils messageUtils;
 
-    public Logger(Vessel plugin) {
+    public Logger(Vessel plugin, MessageUtils messageUtils) {
         this.plugin = plugin;
-        this.messageUtils = plugin.getMessageUtils();
+        this.messageUtils = messageUtils;
     }
 
     private ConfigManager getConfig() {

@@ -44,7 +44,7 @@ public final class Vessel extends JavaPlugin {
             return;
         }
 
-        this.log = new Logger(this);
+        this.log = new Logger(this, messageUtils);
         this.effectHandler = new EffectHandler(log);
         this.cooldownHandler = new CooldownHandler();
         this.vesselManager = new VesselManager(this);
