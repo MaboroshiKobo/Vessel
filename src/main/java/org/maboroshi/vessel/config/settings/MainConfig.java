@@ -129,13 +129,21 @@ public class MainConfig {
     @Configuration
     public static class ModuleEvents {
         @Comment("Capture event settings for this module")
-        public VesselEvent capture = new VesselEvent(true, new EffectGroup(
-                new HashMap<>(Map.of("capture_effect", new SoundEffect("entity.item.pickup", 1f, 1f))),
-                new HashMap<>()), new HashMap<>(Map.of("capture_action", new CommandAction(100.0, List.of("say <player> captured an entity!")))));
+        public VesselEvent capture = new VesselEvent(
+                true,
+                new EffectGroup(
+                        new HashMap<>(Map.of("capture_effect", new SoundEffect("entity.item.pickup", 1f, 1f))),
+                        new HashMap<>()),
+                new HashMap<>(Map.of(
+                        "capture_action", new CommandAction(100.0, List.of("say <player> captured an entity!")))));
 
         @Comment("Release event settings for this module")
-        public VesselEvent release = new VesselEvent(true, new EffectGroup(
-                new HashMap<>(Map.of("release_effect", new SoundEffect("entity.item.break", 1f, 1f))),
-                new HashMap<>()), new HashMap<>(Map.of("release_action", new CommandAction(100.0, List.of("say <player> released an entity!")))));
+        public VesselEvent release = new VesselEvent(
+                true,
+                new EffectGroup(
+                        new HashMap<>(Map.of("release_effect", new SoundEffect("entity.item.break", 1f, 1f))),
+                        new HashMap<>()),
+                new HashMap<>(Map.of(
+                        "release_action", new CommandAction(100.0, List.of("say <player> released an entity!")))));
     }
 }
