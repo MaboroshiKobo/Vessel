@@ -79,14 +79,11 @@ public class CaptureListener implements Listener {
         if (blacklisted) {
             log.debug("Player " + event.getPlayer().getName() + " tried to capture a blacklisted entity.");
             messageUtils.send(
-                    event.getPlayer(),
-                    config.getMessageConfig().cannotCapture,
-                    messageUtils.tag("entity_type", entityType),
-                    messageUtils.tagParsed(
-                            "entity_name",
-                            event.getRightClicked().getName() == null
-                                    ? ""
-                                    : event.getRightClicked().getName()));
+                event.getPlayer(),
+                config.getMessageConfig().general.cannotCapture,
+                messageUtils.tag("entity_type", entityType),
+                messageUtils.tagParsed("entity_name", event.getRightClicked().getName() == null ? "" : event.getRightClicked().getName())
+            );
             return;
         }
 
