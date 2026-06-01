@@ -199,12 +199,7 @@ public class CaptureListener implements Listener {
             return;
         }
 
-        if (handItem.getAmount() > 1) {
-            handItem.setAmount(handItem.getAmount() - 1);
-            player.getInventory().setItemInMainHand(handItem);
-        } else {
-            player.getInventory().setItemInMainHand(null);
-        }
+        handItem.subtract();
 
         player.getInventory()
                 .addItem(captureItem)

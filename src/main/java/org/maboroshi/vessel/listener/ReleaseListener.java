@@ -161,8 +161,7 @@ public class ReleaseListener implements Listener {
         cooldownHandler.setCooldown(player.getUniqueId());
 
         if ("consumable".equals(vesselType)) {
-            handItem.setAmount(handItem.getAmount() - 1);
-            player.getInventory().setItemInMainHand(handItem);
+            handItem.subtract();
         } else if ("reusable".equals(vesselType)) {
             ItemStack emptyVessel = handItem.clone();
             emptyVessel.setAmount(1);
@@ -175,8 +174,7 @@ public class ReleaseListener implements Listener {
             emptyVessel.setItemMeta(emptyMeta);
 
             if (handItem.getAmount() > 1) {
-                handItem.setAmount(handItem.getAmount() - 1);
-                player.getInventory().setItemInMainHand(handItem);
+                handItem.subtract();
 
                 player.getInventory()
                         .addItem(emptyVessel)
