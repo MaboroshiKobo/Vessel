@@ -14,13 +14,13 @@ import org.bukkit.entity.Player;
 import org.maboroshi.vessel.config.ConfigManager;
 
 public class MessageUtils {
+    private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
+
     private final ConfigManager config;
-    private final MiniMessage mm;
     private final boolean hasPAPI;
 
     public MessageUtils(ConfigManager config) {
         this.config = config;
-        this.mm = MiniMessage.miniMessage();
         this.hasPAPI = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
     }
 
@@ -56,7 +56,7 @@ public class MessageUtils {
             finalResolver = TagResolver.resolver(TagResolver.resolver(tags), prefixTag);
         }
 
-        return mm.deserialize(parsedMessage, finalResolver);
+        return MINI_MESSAGE.deserialize(parsedMessage, finalResolver);
     }
 
     public Component parse(CommandSender sender, String message, TagResolver... tags) {
@@ -68,7 +68,7 @@ public class MessageUtils {
                 "prefix", config != null && config.getMessageConfig() != null ? config.getMessageConfig().prefix : "");
 
         TagResolver finalResolver = TagResolver.resolver(TagResolver.resolver(tags), prefixTag);
-        return mm.deserialize(parsedMessage, finalResolver);
+        return MINI_MESSAGE.deserialize(parsedMessage, finalResolver);
     }
 
     public void send(Audience receiver, String message, TagResolver... tags) {
