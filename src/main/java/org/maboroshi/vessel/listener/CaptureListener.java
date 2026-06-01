@@ -18,9 +18,11 @@ import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.api.event.VesselCaptureEvent;
 import org.maboroshi.vessel.config.ConfigManager;
-import org.maboroshi.vessel.config.settings.MainConfig;
-import org.maboroshi.vessel.config.settings.MainConfig.FilterConfiguration;
-import org.maboroshi.vessel.config.settings.MainConfig.FilterMode;
+import org.maboroshi.vessel.config.settings.modules.ConsumableConfiguration;
+import org.maboroshi.vessel.config.settings.modules.ReusableConfiguration;
+import org.maboroshi.vessel.config.settings.shared.ExclusionConfiguration;
+import org.maboroshi.vessel.config.settings.shared.FilterConfiguration;
+import org.maboroshi.vessel.config.settings.shared.FilterMode;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
@@ -69,15 +71,13 @@ public class CaptureListener implements Listener {
             return;
         }
 
-        boolean isEnabled = isConsumable
-                ? config.getMainConfig().modules.consumable.enabled
-                : config.getMainConfig().modules.reusable.enabled;
+        boolean isEnabled = isConsumable ? config.getConsumableConfig().enabled : config.getReusableConfig().enabled;
         if (!isEnabled) {
             return;
         }
 
-        MainConfig.ConsumableConfiguration consumableConfig = config.getMainConfig().modules.consumable;
-        MainConfig.ReusableConfiguration reusableConfig = config.getMainConfig().modules.reusable;
+        ConsumableConfiguration consumableConfig = config.getConsumableConfig();
+        ReusableConfiguration reusableConfig = config.getReusableConfig();
 
         FilterConfiguration worldFilter = isConsumable ? consumableConfig.worlds : reusableConfig.worlds;
         if (!isAllowed(player.getWorld().getName(), worldFilter)) {
@@ -100,9 +100,24 @@ public class CaptureListener implements Listener {
 
         String entityType = target.getType().name().toLowerCase(Locale.ROOT);
 
-        MainConfig.ExclusionConfiguration exclusions = isConsumable
-                ? consumableConfig.exclusions
-                : reusableConfig.exclusions;
+        ExclusionConfiguration exclusions = isConsumable ? consumableConfig.exclusions : reusableConfig.exclusions;
+
+        if (target.getPersistentDataContainer().has(NamespacedKeys.SPAWN_REASON, PersistentDataType.STRING)) {
+            String spawnReason =
+                    target.getPersistentDataContainer().get(NamespacedKeys.SPAWN_REASON, PersistentDataType.STRING);
+            if (!isAllowed(spawnReason, exclusions.spawnReasons)) {
+                messageUtils.send(
+                        player,
+                        config.getMessageConfig().general.blacklistedEntity,
+                        messageUtils.tag("entity_type", entityType),
+                        messageUtils.tag("spawn_reason", spawnReason),
+                        messageUtils.tagParsed(
+                                "entity_name", target.getName() != null ? target.getName() : entityType));
+                log.debug("Player " + player.getName() + " tried to capture entity spawned by reason " + spawnReason
+                        + ".");
+                return;
+            }
+        }
 
         if (exclusions.tamed && target instanceof Tameable tameable && tameable.isTamed()) {
             messageUtils.send(player, config.getMessageConfig().general.cannotCaptureTamed);
@@ -123,7 +138,7 @@ public class CaptureListener implements Listener {
             log.debug("Player " + player.getName() + " tried to capture a disallowed entity.");
             messageUtils.send(
                     player,
-                    config.getMessageConfig().general.blacklistedMob,
+                    config.getMessageConfig().general.blacklistedEntity,
                     messageUtils.tag("entity_type", entityType),
                     messageUtils.tagParsed("entity_name", target.getName() != null ? target.getName() : entityType));
             return;
@@ -161,12 +176,10 @@ public class CaptureListener implements Listener {
                         PersistentDataType.STRING,
                         UUID.randomUUID().toString());
 
-        String displayName = isConsumable
-                ? config.getMainConfig().modules.consumable.displayName
-                : config.getMainConfig().modules.reusable.displayName;
-        List<String> filledLore = isConsumable
-                ? config.getMainConfig().modules.consumable.filledLore
-                : config.getMainConfig().modules.reusable.filledLore;
+        String displayName =
+                isConsumable ? config.getConsumableConfig().displayName : config.getReusableConfig().displayName;
+        List<String> filledLore =
+                isConsumable ? config.getConsumableConfig().filledLore : config.getReusableConfig().filledLore;
 
         ItemHandler.applyText(
                 captureMeta,

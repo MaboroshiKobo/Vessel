@@ -16,6 +16,7 @@ import org.maboroshi.vessel.handler.EffectHandler;
 import org.maboroshi.vessel.handler.VesselEventHandler;
 import org.maboroshi.vessel.listener.CaptureListener;
 import org.maboroshi.vessel.listener.ReleaseListener;
+import org.maboroshi.vessel.listener.SpawnReasonListener;
 import org.maboroshi.vessel.manager.VesselManager;
 import org.maboroshi.vessel.protection.ProtectionService;
 import org.maboroshi.vessel.util.Logger;
@@ -59,6 +60,7 @@ public final class Vessel extends JavaPlugin {
         this.protectionService = ProtectionService.create(this);
         getServer().getPluginManager().registerEvents(new VesselEventHandler(this), this);
 
+        getServer().getPluginManager().registerEvents(new SpawnReasonListener(this), this);
         getServer().getPluginManager().registerEvents(new CaptureListener(this), this);
         getServer().getPluginManager().registerEvents(new ReleaseListener(this), this);
 

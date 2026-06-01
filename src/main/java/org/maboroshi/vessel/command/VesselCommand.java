@@ -96,7 +96,7 @@ public class VesselCommand {
             messageUtils.send(
                     sender,
                     config.getMessageConfig().commands.giveSender,
-                messageUtils.tag("target", player.getName()),
+                    messageUtils.tag("target", player.getName()),
                     messageUtils.tag("amount", amount),
                     messageUtils.tag("type", type));
             messageUtils.send(

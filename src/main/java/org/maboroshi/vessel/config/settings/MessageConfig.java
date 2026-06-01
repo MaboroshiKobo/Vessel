@@ -56,9 +56,14 @@ public class MessageConfig {
             @Comment("Message shown when a player tries to release a named mob while named mobs are excluded.")
             public String cannotReleaseNamed = "<red>You cannot release this named mob!</red>";
 
-            @Comment(
-                    "Message shown when a player attempts to use the vessel on a blacklisted entity.")
-            public String blacklistedMob = "<red>You cannot use the vessel on <entity_type>!</red>";
+            @Comment("Message shown when a player tries to capture a mob spawned by a blacklisted reason.")
+            public String cannotCaptureSpawnReason = "<red>You cannot capture <entity_type> spawned by <spawn_reason>!</red>";
+
+            @Comment("Message shown when a player tries to release a mob spawned by a blacklisted reason.")
+            public String cannotReleaseSpawnReason = "<red>You cannot release <entity_type> spawned by <spawn_reason>!</red>";
+
+            @Comment("Message shown when a player attempts to use the vessel on a blacklisted entity.")
+            public String blacklistedEntity = "<red>You cannot use the vessel on <entity_type>!</red>";
 
             @Comment("Message shown when a player cannot capture in the current protected area.")
             public String cannotCaptureHere = "<red>You cannot capture mobs here!</red>";

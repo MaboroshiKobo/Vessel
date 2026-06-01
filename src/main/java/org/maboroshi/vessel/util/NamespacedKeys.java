@@ -8,6 +8,7 @@ public final class NamespacedKeys {
     public static NamespacedKey CAPTURED_ENTITY;
     public static NamespacedKey CAPTURED_ENTITY_NAME;
     public static NamespacedKey VESSEL_ID;
+    public static NamespacedKey SPAWN_REASON;
 
     private NamespacedKeys() {}
 
@@ -16,5 +17,6 @@ public final class NamespacedKeys {
         CAPTURED_ENTITY = new NamespacedKey(plugin, "captured_entity");
         CAPTURED_ENTITY_NAME = new NamespacedKey(plugin, "captured_entity_name");
         VESSEL_ID = new NamespacedKey(plugin, "vessel_id");
+        SPAWN_REASON = new NamespacedKey(plugin, "spawn_reason");
     }
 }

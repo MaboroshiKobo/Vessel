@@ -20,40 +20,28 @@ public class VesselManager {
         this.config = plugin.getConfigManager();
     }
 
-    /**
-     * Creates an empty vessel item based on the specified type.
-     * @param type The type of vessel ("consumable" or "reusable")
-     * @return The constructed ItemStack, or null if the type is invalid or disabled.
-     */
     public ItemStack createEmptyVessel(String type) {
         if ("consumable".equalsIgnoreCase(type)) {
-            if (!config.getMainConfig().modules.consumable.enabled) return null;
+            if (!config.getConsumableConfig().enabled) return null;
 
-            ItemStack item =
-                    resolveConfiguredItem(config.getMainConfig().modules.consumable.item, Material.AMETHYST_SHARD);
+            ItemStack item = resolveConfiguredItem(config.getConsumableConfig().item, Material.AMETHYST_SHARD);
             ItemMeta meta = item.getItemMeta();
             if (meta == null) return null;
 
-            ItemHandler.applyText(
-                    meta,
-                    config.getMainConfig().modules.consumable.displayName,
-                    config.getMainConfig().modules.consumable.lore);
+            ItemHandler.applyText(meta, config.getConsumableConfig().displayName, config.getConsumableConfig().lore);
 
             meta.getPersistentDataContainer().set(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING, "consumable");
             item.setItemMeta(meta);
             return item;
 
         } else if ("reusable".equalsIgnoreCase(type)) {
-            if (!config.getMainConfig().modules.reusable.enabled) return null;
+            if (!config.getReusableConfig().enabled) return null;
 
-            ItemStack item = resolveConfiguredItem(config.getMainConfig().modules.reusable.item, Material.ECHO_SHARD);
+            ItemStack item = resolveConfiguredItem(config.getReusableConfig().item, Material.ECHO_SHARD);
             ItemMeta meta = item.getItemMeta();
             if (meta == null) return null;
 
-            ItemHandler.applyText(
-                    meta,
-                    config.getMainConfig().modules.reusable.displayName,
-                    config.getMainConfig().modules.reusable.lore);
+            ItemHandler.applyText(meta, config.getReusableConfig().displayName, config.getReusableConfig().lore);
 
             meta.getPersistentDataContainer().set(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING, "reusable");
             item.setItemMeta(meta);

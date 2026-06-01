@@ -19,9 +19,11 @@ import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.api.event.VesselReleaseEvent;
 import org.maboroshi.vessel.config.ConfigManager;
-import org.maboroshi.vessel.config.settings.MainConfig;
-import org.maboroshi.vessel.config.settings.MainConfig.FilterConfiguration;
-import org.maboroshi.vessel.config.settings.MainConfig.FilterMode;
+import org.maboroshi.vessel.config.settings.modules.ConsumableConfiguration;
+import org.maboroshi.vessel.config.settings.modules.ReusableConfiguration;
+import org.maboroshi.vessel.config.settings.shared.ExclusionConfiguration;
+import org.maboroshi.vessel.config.settings.shared.FilterConfiguration;
+import org.maboroshi.vessel.config.settings.shared.FilterMode;
 import org.maboroshi.vessel.handler.CooldownHandler;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Logger;
@@ -84,11 +86,10 @@ public class ReleaseListener implements Listener {
             return;
         }
 
-        MainConfig.ConsumableConfiguration consumableConfig = config.getMainConfig().modules.consumable;
-        MainConfig.ReusableConfiguration reusableConfig = config.getMainConfig().modules.reusable;
-        MainConfig.ExclusionConfiguration exclusions = "consumable".equals(vesselType)
-            ? consumableConfig.exclusions
-            : reusableConfig.exclusions;
+        ConsumableConfiguration consumableConfig = config.getConsumableConfig();
+        ReusableConfiguration reusableConfig = config.getReusableConfig();
+        ExclusionConfiguration exclusions =
+                "consumable".equals(vesselType) ? consumableConfig.exclusions : reusableConfig.exclusions;
         FilterConfiguration worldFilter =
                 "consumable".equals(vesselType) ? consumableConfig.worlds : reusableConfig.worlds;
 
@@ -170,10 +171,7 @@ public class ReleaseListener implements Listener {
             emptyMeta.getPersistentDataContainer().remove(NamespacedKeys.CAPTURED_ENTITY);
             emptyMeta.getPersistentDataContainer().remove(NamespacedKeys.CAPTURED_ENTITY_NAME);
             emptyMeta.getPersistentDataContainer().remove(NamespacedKeys.VESSEL_ID);
-            ItemHandler.applyText(
-                    emptyMeta,
-                    config.getMainConfig().modules.reusable.displayName,
-                    config.getMainConfig().modules.reusable.lore);
+            ItemHandler.applyText(emptyMeta, config.getReusableConfig().displayName, config.getReusableConfig().lore);
             emptyVessel.setItemMeta(emptyMeta);
 
             if (handItem.getAmount() > 1) {

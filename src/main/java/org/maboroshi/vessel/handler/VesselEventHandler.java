@@ -10,7 +10,8 @@ import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.api.event.VesselCaptureEvent;
 import org.maboroshi.vessel.api.event.VesselReleaseEvent;
 import org.maboroshi.vessel.config.ConfigManager;
-import org.maboroshi.vessel.config.settings.MainConfig;
+import org.maboroshi.vessel.config.settings.shared.ModuleEvents;
+import org.maboroshi.vessel.config.settings.shared.VesselEvent;
 
 public class VesselEventHandler implements Listener {
     private final ConfigManager config;
@@ -26,7 +27,7 @@ public class VesselEventHandler implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onCapture(VesselCaptureEvent event) {
         String vesselType = event.getVesselType();
-        MainConfig.ModuleEvents moduleEvents = moduleEventsForType(vesselType);
+        ModuleEvents moduleEvents = moduleEventsForType(vesselType);
         if (moduleEvents == null) return;
         runModuleEvent(
                 moduleEvents.capture,
@@ -40,7 +41,7 @@ public class VesselEventHandler implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onRelease(VesselReleaseEvent event) {
         String vesselType = event.getVesselType();
-        MainConfig.ModuleEvents moduleEvents = moduleEventsForType(vesselType);
+        ModuleEvents moduleEvents = moduleEventsForType(vesselType);
         if (moduleEvents == null) return;
         runModuleEvent(
                 moduleEvents.release,
@@ -51,16 +52,16 @@ public class VesselEventHandler implements Listener {
                 vesselType);
     }
 
-    private MainConfig.ModuleEvents moduleEventsForType(String vesselType) {
+    private ModuleEvents moduleEventsForType(String vesselType) {
         return switch (vesselType) {
-            case "consumable" -> config.getMainConfig().modules.consumable.events;
-            case "reusable" -> config.getMainConfig().modules.reusable.events;
+            case "consumable" -> config.getConsumableConfig().events;
+            case "reusable" -> config.getReusableConfig().events;
             default -> null;
         };
     }
 
     private void runModuleEvent(
-            MainConfig.VesselEvent event,
+            VesselEvent event,
             Location location,
             OfflinePlayer player,
             String entityName,
