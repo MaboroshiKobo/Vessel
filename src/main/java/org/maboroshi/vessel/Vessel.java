@@ -58,8 +58,8 @@ public final class Vessel extends JavaPlugin {
         this.actionHandler = new ActionHandler(this);
         this.vesselManager = new VesselManager(this);
         this.protectionService = ProtectionService.create(this);
-        getServer().getPluginManager().registerEvents(new VesselEventHandler(this), this);
 
+        getServer().getPluginManager().registerEvents(new VesselEventHandler(this), this);
         getServer().getPluginManager().registerEvents(new SpawnReasonListener(this), this);
         getServer().getPluginManager().registerEvents(new CaptureListener(this), this);
         getServer().getPluginManager().registerEvents(new ReleaseListener(this), this);

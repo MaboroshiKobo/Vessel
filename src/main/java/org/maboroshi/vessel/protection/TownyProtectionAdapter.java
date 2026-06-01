@@ -39,13 +39,6 @@ public final class TownyProtectionAdapter implements ProtectionAdapter {
             return true;
         }
 
-        int chunkX = location.getBlockX() >> 4;
-        int chunkZ = location.getBlockZ() >> 4;
-
-        if (!world.isChunkLoaded(chunkX, chunkZ)) {
-            return false;
-        }
-
         return PlayerCacheUtil.getCachePermission(
                 player, location, location.getBlock().getType(), ActionType.BUILD);
     }
