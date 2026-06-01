@@ -11,13 +11,16 @@ import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.config.ConfigManager;
 import org.maboroshi.vessel.handler.ItemHandler;
+import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.NamespacedKeys;
 
 public class VesselManager {
     private final ConfigManager config;
+    private final Logger log;
 
     public VesselManager(Vessel plugin) {
         this.config = plugin.getConfigManager();
+        this.log = plugin.getPluginLogger();
     }
 
     public ItemStack createEmptyVessel(String type) {
@@ -65,6 +68,8 @@ public class VesselManager {
                         .orElse(null);
                 if (nexoItem != null) return nexoItem;
             }
+
+            log.warn("Invalid material ID configured: " + configuredItem + ". Defaulting to " + fallback.name() + ".");
         }
 
         return new ItemStack(fallback);
