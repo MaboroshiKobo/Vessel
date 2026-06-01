@@ -70,22 +70,25 @@ public class ActionHandler {
     private void dispatch(OfflinePlayer player, String command) {
         if (command == null || command.isEmpty()) return;
 
-        String parsed = command;
-        if (player != null) {
-            String name = player.getName();
-            parsed = parsed.replace("<player>", name != null ? name : "Unknown")
-                    .replace("<uuid>", player.getUniqueId().toString());
-        }
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            String parsed = command;
+            if (player != null) {
+                String name = player.getName();
+                parsed = parsed.replace("<player>", name != null ? name : "Unknown")
+                        .replace("<uuid>", player.getUniqueId().toString());
+            }
 
-        if (player instanceof Player online && hasPAPI) {
-            parsed = PlaceholderAPI.setPlaceholders(online, parsed);
-        }
+            if (player instanceof Player online && hasPAPI) {
+                parsed = PlaceholderAPI.setPlaceholders(online, parsed);
+            }
 
-        if (parsed.startsWith("/")) {
-            parsed = parsed.substring(1);
-        }
+            if (parsed.startsWith("/")) {
+                parsed = parsed.substring(1);
+            }
 
-        final String finalCommand = parsed;
-        Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand));
+            final String finalCommand = parsed;
+            Bukkit.getScheduler()
+                    .runTask(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand));
+        });
     }
 }
