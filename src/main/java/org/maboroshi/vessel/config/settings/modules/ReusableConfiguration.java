@@ -24,7 +24,7 @@ public class ReusableConfiguration {
             new FilterConfiguration(FilterMode.BLACKLIST, ModuleSettings.DEFAULT_ENTITY_BLACKLIST);
 
     @Comment({"The material ID for the reusable vessel item.", "Nexo custom items are supported."})
-    public String item = "echo_shard";
+    public String item = "decorated_pot";
 
     @Comment("Display name for the empty reusable vessel component.")
     public String displayName = "<dark_aqua>Enduring Vessel</dark_aqua>";

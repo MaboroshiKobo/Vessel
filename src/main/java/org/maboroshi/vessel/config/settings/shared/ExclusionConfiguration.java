@@ -14,7 +14,7 @@ public class ExclusionConfiguration {
 
     @Comment({
         "Spawn reasons allowed for capture.",
-        "Use WHITELIST to allow only the listed reasons, or BLACKLIST to block listed reasons."
+        "Accepted values: NONE, BLACKLIST, WHITELIST."
     })
-    public FilterConfiguration spawnReasons = new FilterConfiguration(FilterMode.WHITELIST, List.of("NATURAL"));
+    public FilterConfiguration spawnReasons = new FilterConfiguration(FilterMode.BLACKLIST, List.of("CUSTOM"));
 }
