@@ -24,7 +24,7 @@ public class ConsumableConfiguration {
             new FilterConfiguration(FilterMode.BLACKLIST, ModuleSettings.DEFAULT_ENTITY_BLACKLIST);
 
     @Comment({"The material ID for the consumable vessel item.", "Nexo custom items are supported."})
-    public String item = "decorated_pot";
+    public String item = "amethyst_shard";
 
     @Comment("Display name for the empty consumable vessel component.")
     public String displayName = "<light_purple>Fragile Vessel</light_purple>";
@@ -38,7 +38,7 @@ public class ConsumableConfiguration {
             "<gray>Right-click to release the captured mob.</gray>",
             "<red>Breaks upon release.</red>",
             "<reset>",
-            "<gray>Contains <entity_name> of type <entity_type>.</gray>");
+            "<gray>Contains <white><entity_name></white> of type <white><entity_type></white>.</gray>");
 
     @Comment("Event configuration")
     public ModuleEvents events = new ModuleEvents();

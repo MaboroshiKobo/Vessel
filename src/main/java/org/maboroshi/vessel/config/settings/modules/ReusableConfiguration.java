@@ -24,7 +24,7 @@ public class ReusableConfiguration {
             new FilterConfiguration(FilterMode.BLACKLIST, ModuleSettings.DEFAULT_ENTITY_BLACKLIST);
 
     @Comment({"The material ID for the reusable vessel item.", "Nexo custom items are supported."})
-    public String item = "decorated_pot";
+    public String item = "amethyst_shard";
 
     @Comment("Display name for the empty reusable vessel component.")
     public String displayName = "<dark_aqua>Enduring Vessel</dark_aqua>";
@@ -38,7 +38,7 @@ public class ReusableConfiguration {
             "<gray>Right-click to release the captured mob.</gray>",
             "<green>Can be reused multiple times.</green>",
             "<reset>",
-            "<gray>Contains <entity_name> of type <entity_type>.</gray>");
+            "<gray>Contains <white><entity_name></white> of type <white><entity_type></white>.</gray>");
 
     @Comment("Event configuration")
     public ModuleEvents events = new ModuleEvents();

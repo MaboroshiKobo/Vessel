@@ -169,6 +169,14 @@ public class CaptureListener implements Listener {
         captureMeta
                 .getPersistentDataContainer()
                 .set(NamespacedKeys.CAPTURED_ENTITY_NAME, PersistentDataType.STRING, safeEntityName);
+        String spawnReason =
+                target.getPersistentDataContainer().get(NamespacedKeys.SPAWN_REASON, PersistentDataType.STRING);
+        if (spawnReason == null || spawnReason.isEmpty()) {
+            spawnReason = target.getEntitySpawnReason().name();
+        }
+        captureMeta
+                .getPersistentDataContainer()
+                .set(NamespacedKeys.SPAWN_REASON, PersistentDataType.STRING, spawnReason);
         captureMeta
                 .getPersistentDataContainer()
                 .set(

@@ -12,9 +12,6 @@ public class ExclusionConfiguration {
     @Comment("Should named mobs be excluded from capture?")
     public boolean named = false;
 
-    @Comment({
-        "Spawn reasons allowed for capture.",
-        "Accepted values: NONE, BLACKLIST, WHITELIST."
-    })
+    @Comment({"Spawn reasons allowed for capture.", "Accepted values: NONE, BLACKLIST, WHITELIST."})
     public FilterConfiguration spawnReasons = new FilterConfiguration(FilterMode.BLACKLIST, List.of("CUSTOM"));
 }

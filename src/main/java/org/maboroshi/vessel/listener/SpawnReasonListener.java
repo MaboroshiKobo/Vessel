@@ -11,13 +11,11 @@ public class SpawnReasonListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onCreatureSpawn(CreatureSpawnEvent event) {
-        CreatureSpawnEvent.SpawnReason spawnReason = event.getSpawnReason();
-        if (spawnReason == CreatureSpawnEvent.SpawnReason.NATURAL) {
-            return;
-        }
-
         event.getEntity()
                 .getPersistentDataContainer()
-                .set(NamespacedKeys.SPAWN_REASON, org.bukkit.persistence.PersistentDataType.STRING, spawnReason.name());
+                .set(
+                        NamespacedKeys.SPAWN_REASON,
+                        org.bukkit.persistence.PersistentDataType.STRING,
+                        event.getSpawnReason().name());
     }
 }

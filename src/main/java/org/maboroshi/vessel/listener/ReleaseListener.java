@@ -11,6 +11,7 @@ import org.bukkit.entity.Tameable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -75,6 +76,8 @@ public class ReleaseListener implements Listener {
         }
         String capturedEntityName = handMeta.getPersistentDataContainer()
                 .get(NamespacedKeys.CAPTURED_ENTITY_NAME, PersistentDataType.STRING);
+        String storedSpawnReason =
+                handMeta.getPersistentDataContainer().get(NamespacedKeys.SPAWN_REASON, PersistentDataType.STRING);
 
         event.setCancelled(true);
 
@@ -138,8 +141,9 @@ public class ReleaseListener implements Listener {
             return;
         }
 
-        Entity releasedEntity = snapshot.createEntity(releaseLocation);
-        if (releasedEntity == null) {
+        CreatureSpawnEvent.SpawnReason spawnReason = resolveSpawnReason(storedSpawnReason);
+        Entity releasedEntity = snapshot.createEntity(releaseLocation.getWorld());
+        if (!releasedEntity.spawnAt(releaseLocation, spawnReason)) {
             return;
         }
 
@@ -169,6 +173,7 @@ public class ReleaseListener implements Listener {
 
             emptyMeta.getPersistentDataContainer().remove(NamespacedKeys.CAPTURED_ENTITY);
             emptyMeta.getPersistentDataContainer().remove(NamespacedKeys.CAPTURED_ENTITY_NAME);
+            emptyMeta.getPersistentDataContainer().remove(NamespacedKeys.SPAWN_REASON);
             emptyMeta.getPersistentDataContainer().remove(NamespacedKeys.VESSEL_ID);
             ItemHandler.applyText(emptyMeta, config.getReusableConfig().displayName, config.getReusableConfig().lore);
             emptyVessel.setItemMeta(emptyMeta);
@@ -183,6 +188,19 @@ public class ReleaseListener implements Listener {
             } else {
                 player.getInventory().setItemInMainHand(emptyVessel);
             }
+        }
+    }
+
+    private CreatureSpawnEvent.SpawnReason resolveSpawnReason(String storedSpawnReason) {
+        if (storedSpawnReason == null || storedSpawnReason.isEmpty()) {
+            return CreatureSpawnEvent.SpawnReason.CUSTOM;
+        }
+
+        try {
+            return CreatureSpawnEvent.SpawnReason.valueOf(storedSpawnReason.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            log.debug("Unknown stored spawn reason '" + storedSpawnReason + "', falling back to CUSTOM.");
+            return CreatureSpawnEvent.SpawnReason.CUSTOM;
         }
     }
 
