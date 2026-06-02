@@ -2,7 +2,7 @@ package org.maboroshi.vessel.config.settings.shared;
 
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import org.maboroshi.vessel.config.objects.CommandAction;
 import org.maboroshi.vessel.config.objects.effects.EffectGroup;
@@ -17,7 +17,7 @@ public class VesselEvent {
     public EffectGroup effects = new EffectGroup();
 
     @Comment("Actions that execute when the event triggers.")
-    public Map<String, CommandAction> actions = new HashMap<>();
+    public Map<String, CommandAction> actions = Collections.emptyMap();
 
     public VesselEvent() {}
 
@@ -31,17 +31,15 @@ public class VesselEvent {
         return new VesselEvent(
                 true,
                 new EffectGroup(
-                        new HashMap<>(Map.of("capture", new SoundEffect("entity.item.pickup", 1f, 1f))),
-                        new HashMap<>()),
-                new HashMap<>());
+                        Map.of("capture", new SoundEffect("entity.item.pickup", 1f, 1f)), Collections.emptyMap()),
+                Collections.emptyMap());
     }
 
     public static VesselEvent releaseDefault() {
         return new VesselEvent(
                 true,
                 new EffectGroup(
-                        new HashMap<>(Map.of("release", new SoundEffect("entity.item.break", 1f, 1f))),
-                        new HashMap<>()),
-                new HashMap<>());
+                        Map.of("release", new SoundEffect("entity.item.break", 1f, 1f)), Collections.emptyMap()),
+                Collections.emptyMap());
     }
 }
