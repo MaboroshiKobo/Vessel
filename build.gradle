@@ -65,11 +65,11 @@ spotless {
   }
 
   java {
-    target 'src/*/java/**/*.java'
-    palantirJavaFormat('2.91.0')
-    formatAnnotations()
     importOrder()
     removeUnusedImports()
+    forbidWildcardImports()
     cleanthat()
+    palantirJavaFormat('2.91.0')
+    formatAnnotations()
   }
 }
