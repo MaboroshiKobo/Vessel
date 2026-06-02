@@ -48,46 +48,33 @@ public class ReleaseListener implements Listener {
 
     @EventHandler
     public void onRelease(PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getHand() != EquipmentSlot.HAND) {
-            return;
-        }
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getHand() != EquipmentSlot.HAND) return;
 
         Block clickedBlock = event.getClickedBlock();
-        if (clickedBlock == null) {
-            return;
-        }
+        if (clickedBlock == null) return;
 
         Player player = event.getPlayer();
         ItemStack handItem = player.getInventory().getItemInMainHand();
 
-        if (!handItem.hasItemMeta()) {
-            return;
-        }
+        if (!handItem.hasItemMeta()) return;
 
         ItemMeta handMeta = handItem.getItemMeta();
-        if (!handMeta.getPersistentDataContainer().has(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING)) {
-            return;
-        }
-
-        String capturedNBT =
-                handMeta.getPersistentDataContainer().get(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING);
-        if (capturedNBT == null || capturedNBT.isEmpty()) {
-            return;
-        }
-        String capturedEntityName = handMeta.getPersistentDataContainer()
-                .get(NamespacedKeys.CAPTURED_ENTITY_NAME, PersistentDataType.STRING);
-        String storedSpawnReason =
-                handMeta.getPersistentDataContainer().get(NamespacedKeys.SPAWN_REASON, PersistentDataType.STRING);
-
-        event.setCancelled(true);
+        if (!handMeta.getPersistentDataContainer().has(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING)) return;
 
         String vesselType =
                 handMeta.getPersistentDataContainer().get(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING);
+        if (!"consumable".equals(vesselType) && !"reusable".equals(vesselType)) return;
 
         if (!player.hasPermission("vessel.use." + vesselType)) {
             messageUtils.send(player, config.getMessageConfig().general.cannotUseVessel);
             return;
         }
+
+        String capturedNBT =
+                handMeta.getPersistentDataContainer().get(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING);
+        if (capturedNBT == null || capturedNBT.isEmpty()) return;
+
+        event.setCancelled(true);
 
         ConsumableConfiguration consumableConfig = config.getConsumableConfig();
         ReusableConfiguration reusableConfig = config.getReusableConfig();
@@ -128,6 +115,11 @@ public class ReleaseListener implements Listener {
             return;
         }
 
+        String capturedEntityName = handMeta.getPersistentDataContainer()
+                .get(NamespacedKeys.CAPTURED_ENTITY_NAME, PersistentDataType.STRING);
+        String storedSpawnReason =
+                handMeta.getPersistentDataContainer().get(NamespacedKeys.SPAWN_REASON, PersistentDataType.STRING);
+
         VesselReleaseEvent releaseEvent = new VesselReleaseEvent(
                 player,
                 snapshot,
@@ -137,32 +129,7 @@ public class ReleaseListener implements Listener {
                 handItem);
         plugin.getServer().getPluginManager().callEvent(releaseEvent);
 
-        if (releaseEvent.isCancelled()) {
-            return;
-        }
-
-        CreatureSpawnEvent.SpawnReason spawnReason = resolveSpawnReason(storedSpawnReason);
-        Entity releasedEntity = snapshot.createEntity(releaseLocation.getWorld());
-        if (!releasedEntity.spawnAt(releaseLocation, spawnReason)) {
-            return;
-        }
-
-        if (exclusions.tamed && releasedEntity instanceof Tameable tameable && tameable.isTamed()) {
-            releasedEntity.remove();
-            messageUtils.send(player, config.getMessageConfig().general.cannotReleaseTamed);
-            return;
-        }
-
-        if (exclusions.named && releasedEntity.customName() != null) {
-            releasedEntity.remove();
-            messageUtils.send(
-                    player,
-                    config.getMessageConfig().general.cannotReleaseNamed,
-                    messageUtils.tag("entity_type", entityType));
-            return;
-        }
-
-        cooldownHandler.setCooldown(player.getUniqueId());
+        if (releaseEvent.isCancelled()) return;
 
         if ("consumable".equals(vesselType)) {
             handItem.subtract();
@@ -180,7 +147,6 @@ public class ReleaseListener implements Listener {
 
             if (handItem.getAmount() > 1) {
                 handItem.subtract();
-
                 player.getInventory()
                         .addItem(emptyVessel)
                         .values()
@@ -189,13 +155,33 @@ public class ReleaseListener implements Listener {
                 player.getInventory().setItemInMainHand(emptyVessel);
             }
         }
+
+        CreatureSpawnEvent.SpawnReason spawnReason = resolveSpawnReason(storedSpawnReason);
+        Entity releasedEntity = snapshot.createEntity(releaseLocation.getWorld());
+        if (!releasedEntity.spawnAt(releaseLocation, spawnReason)) return;
+
+        if (exclusions.tamed && releasedEntity instanceof Tameable tameable && tameable.isTamed()) {
+            releasedEntity.remove();
+            messageUtils.send(player, config.getMessageConfig().general.cannotReleaseTamed);
+            return;
+        }
+
+        if (exclusions.named && releasedEntity.customName() != null) {
+            releasedEntity.remove();
+            messageUtils.send(
+                    player,
+                    config.getMessageConfig().general.cannotReleaseNamed,
+                    messageUtils.tag("entity_type", entityType));
+            return;
+        }
+
+        cooldownHandler.setCooldown(player.getUniqueId());
     }
 
     private CreatureSpawnEvent.SpawnReason resolveSpawnReason(String storedSpawnReason) {
         if (storedSpawnReason == null || storedSpawnReason.isEmpty()) {
             return CreatureSpawnEvent.SpawnReason.CUSTOM;
         }
-
         try {
             return CreatureSpawnEvent.SpawnReason.valueOf(storedSpawnReason.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
@@ -205,10 +191,7 @@ public class ReleaseListener implements Listener {
     }
 
     private boolean isAllowed(String value, FilterConfiguration filter) {
-        if (filter.mode == FilterMode.NONE) {
-            return true;
-        }
-
+        if (filter.mode == FilterMode.NONE) return true;
         boolean listed = filter.values.stream().anyMatch(value::equalsIgnoreCase);
         return filter.mode == FilterMode.WHITELIST ? listed : !listed;
     }
@@ -218,9 +201,7 @@ public class ReleaseListener implements Listener {
         Location base = relativeBlock.getLocation().add(0.5, 0, 0.5);
 
         if (relativeBlock.isPassable()
-                && relativeBlock.getRelative(BlockFace.UP).isPassable()) {
-            return base;
-        }
+                && relativeBlock.getRelative(BlockFace.UP).isPassable()) return base;
 
         for (int yOffset = 0; yOffset <= 2; yOffset++) {
             for (int xOffset = -1; xOffset <= 1; xOffset++) {
@@ -237,11 +218,8 @@ public class ReleaseListener implements Listener {
         for (int yOffset = 3; yOffset <= 5; yOffset++) {
             Location candidate = base.clone().add(0, yOffset, 0);
             if (candidate.getBlock().isPassable()
-                    && candidate.clone().add(0, 1, 0).getBlock().isPassable()) {
-                return candidate;
-            }
+                    && candidate.clone().add(0, 1, 0).getBlock().isPassable()) return candidate;
         }
-
         return null;
     }
 }

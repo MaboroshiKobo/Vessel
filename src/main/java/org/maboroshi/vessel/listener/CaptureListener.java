@@ -43,16 +43,12 @@ public class CaptureListener implements Listener {
 
     @EventHandler
     public void onCapture(PlayerInteractEntityEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND) {
-            return;
-        }
+        if (event.getHand() != EquipmentSlot.HAND) return;
 
         Player player = event.getPlayer();
         ItemStack handItem = player.getInventory().getItemInMainHand();
 
-        if (!handItem.hasItemMeta()) {
-            return;
-        }
+        if (!handItem.hasItemMeta()) return;
 
         ItemMeta handMeta = handItem.getItemMeta();
         if (!handMeta.getPersistentDataContainer().has(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING)
@@ -61,20 +57,21 @@ public class CaptureListener implements Listener {
             return;
         }
 
-        event.setCancelled(true);
-
         String tier = handMeta.getPersistentDataContainer().get(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING);
         boolean isConsumable = "consumable".equals(tier);
         boolean isReusable = "reusable".equals(tier);
 
-        if (!isConsumable && !isReusable) {
+        if (!isConsumable && !isReusable) return;
+
+        if (!player.hasPermission("vessel.use." + tier)) {
+            messageUtils.send(player, config.getMessageConfig().general.cannotUseVessel);
             return;
         }
 
+        event.setCancelled(true);
+
         boolean isEnabled = isConsumable ? config.getConsumableConfig().enabled : config.getReusableConfig().enabled;
-        if (!isEnabled) {
-            return;
-        }
+        if (!isEnabled) return;
 
         ConsumableConfiguration consumableConfig = config.getConsumableConfig();
         ReusableConfiguration reusableConfig = config.getReusableConfig();
@@ -82,11 +79,6 @@ public class CaptureListener implements Listener {
         FilterConfiguration worldFilter = isConsumable ? consumableConfig.worlds : reusableConfig.worlds;
         if (!isAllowed(player.getWorld().getName(), worldFilter)) {
             messageUtils.send(player, config.getMessageConfig().general.cannotCaptureWorld);
-            return;
-        }
-
-        if (!player.hasPermission("vessel.use." + tier)) {
-            messageUtils.send(player, config.getMessageConfig().general.cannotUseVessel);
             return;
         }
 
@@ -152,9 +144,7 @@ public class CaptureListener implements Listener {
             return;
         }
 
-        if (plugin.getCooldownHandler().isOnCooldown(player.getUniqueId(), config.getMainConfig().cooldown)) {
-            return;
-        }
+        if (plugin.getCooldownHandler().isOnCooldown(player.getUniqueId(), config.getMainConfig().cooldown)) return;
 
         ItemStack captureItem = handItem.clone();
         captureItem.setAmount(1);
@@ -203,9 +193,7 @@ public class CaptureListener implements Listener {
                 new VesselCaptureEvent(player, snapshot, captureLocation, tier, safeEntityName, captureItem);
         plugin.getServer().getPluginManager().callEvent(captureEvent);
 
-        if (captureEvent.isCancelled()) {
-            return;
-        }
+        if (captureEvent.isCancelled()) return;
 
         handItem.subtract();
 
@@ -219,9 +207,7 @@ public class CaptureListener implements Listener {
     }
 
     private boolean isAllowed(String value, FilterConfiguration filter) {
-        if (filter.mode == FilterMode.NONE) {
-            return true;
-        }
+        if (filter.mode == FilterMode.NONE) return true;
 
         boolean listed = filter.values.stream().anyMatch(value::equalsIgnoreCase);
         return filter.mode == FilterMode.WHITELIST ? listed : !listed;
