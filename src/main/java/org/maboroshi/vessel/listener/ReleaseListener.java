@@ -84,7 +84,10 @@ public class ReleaseListener implements Listener {
                 "consumable".equals(vesselType) ? consumableConfig.worlds : reusableConfig.worlds;
 
         if (!isAllowed(player.getWorld().getName(), worldFilter)) {
-            messageUtils.send(player, config.getMessageConfig().general.cannotReleaseWorld);
+            messageUtils.send(
+                    player,
+                    config.getMessageConfig().general.cannotReleaseWorld,
+                    messageUtils.tag("world", player.getWorld().getName()));
             return;
         }
 

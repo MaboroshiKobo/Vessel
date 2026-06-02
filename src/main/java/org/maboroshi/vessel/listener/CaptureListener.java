@@ -78,7 +78,10 @@ public class CaptureListener implements Listener {
 
         FilterConfiguration worldFilter = isConsumable ? consumableConfig.worlds : reusableConfig.worlds;
         if (!isAllowed(player.getWorld().getName(), worldFilter)) {
-            messageUtils.send(player, config.getMessageConfig().general.cannotCaptureWorld);
+            messageUtils.send(
+                    player,
+                    config.getMessageConfig().general.cannotCaptureWorld,
+                    messageUtils.tag("world", player.getWorld().getName()));
             return;
         }
 
