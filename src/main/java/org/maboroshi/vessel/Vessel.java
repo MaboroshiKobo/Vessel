@@ -22,6 +22,7 @@ import org.maboroshi.vessel.protection.ProtectionService;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
 import org.maboroshi.vessel.util.NamespacedKeys;
+import org.maboroshi.vessel.util.UpdateChecker;
 
 public final class Vessel extends JavaPlugin {
     private static Vessel plugin;
@@ -76,6 +77,8 @@ public final class Vessel extends JavaPlugin {
 
         @SuppressWarnings("unused")
         Metrics metrics = new Metrics(this, 31642);
+
+        new UpdateChecker(this).checkForUpdates();
     }
 
     @Override
