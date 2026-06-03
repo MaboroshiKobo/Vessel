@@ -1,4 +1,5 @@
 <div align="center">
+  <img src="https://raw.githubusercontent.com/MaboroshiKobo/branding/refs/heads/main/projects/vessel/vessel.aivf" width="180" alt="Vessel Logo" />
   <h1>Vessel</h1>
   <p>A highly customizable Paper plugin for capturing and releasing entities into configurable vessel items.</p>
 
@@ -6,6 +7,12 @@
     <img alt="paper" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/paper_vector.svg">
     <img alt="purpur" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/purpur_vector.svg">
     <img alt="spigot" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/unsupported/spigot_vector.svg">
+  </p>
+
+  <p>
+    <a href="https://github.com/MaboroshiKobo/PartyAnimals"><img alt="github" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/github_vector.svg"></a>
+    <a href="https://hangar.papermc.io/Maboroshi/PartyAnimals"><img alt="hangar" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/hangar_vector.svg"></a>
+    <a href="https://modrinth.com/plugin/partyanimals"><img alt="modrinth" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/modrinth_vector.svg"></a>
   </p>
 
   <p>
