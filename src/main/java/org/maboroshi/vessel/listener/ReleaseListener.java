@@ -123,6 +123,21 @@ public class ReleaseListener implements Listener {
         String storedSpawnReason =
                 handMeta.getPersistentDataContainer().get(NamespacedKeys.SPAWN_REASON, PersistentDataType.STRING);
 
+        Entity releasedEntity = snapshot.createEntity(releaseLocation.getWorld());
+
+        if (exclusions.tamed && releasedEntity instanceof Tameable tameable && tameable.isTamed()) {
+            messageUtils.send(player, config.getMessageConfig().general.cannotReleaseTamed);
+            return;
+        }
+
+        if (exclusions.named && releasedEntity.customName() != null) {
+            messageUtils.send(
+                    player,
+                    config.getMessageConfig().general.cannotReleaseNamed,
+                    messageUtils.tag("entity_type", entityType));
+            return;
+        }
+
         VesselReleaseEvent releaseEvent = new VesselReleaseEvent(
                 player,
                 snapshot,
@@ -133,6 +148,9 @@ public class ReleaseListener implements Listener {
         plugin.getServer().getPluginManager().callEvent(releaseEvent);
 
         if (releaseEvent.isCancelled()) return;
+
+        CreatureSpawnEvent.SpawnReason spawnReason = resolveSpawnReason(storedSpawnReason);
+        if (!releasedEntity.spawnAt(releaseLocation, spawnReason)) return;
 
         if ("consumable".equals(vesselType)) {
             handItem.subtract();
@@ -157,25 +175,6 @@ public class ReleaseListener implements Listener {
             } else {
                 player.getInventory().setItemInMainHand(emptyVessel);
             }
-        }
-
-        CreatureSpawnEvent.SpawnReason spawnReason = resolveSpawnReason(storedSpawnReason);
-        Entity releasedEntity = snapshot.createEntity(releaseLocation.getWorld());
-        if (!releasedEntity.spawnAt(releaseLocation, spawnReason)) return;
-
-        if (exclusions.tamed && releasedEntity instanceof Tameable tameable && tameable.isTamed()) {
-            releasedEntity.remove();
-            messageUtils.send(player, config.getMessageConfig().general.cannotReleaseTamed);
-            return;
-        }
-
-        if (exclusions.named && releasedEntity.customName() != null) {
-            releasedEntity.remove();
-            messageUtils.send(
-                    player,
-                    config.getMessageConfig().general.cannotReleaseNamed,
-                    messageUtils.tag("entity_type", entityType));
-            return;
         }
 
         cooldownHandler.setCooldown(player.getUniqueId());
