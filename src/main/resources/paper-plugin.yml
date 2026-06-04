@@ -1,5 +1,5 @@
 name: Vessel
-version: "1.0.0"
+version: "${version}"
 main: org.maboroshi.vessel.Vessel
 loader: org.maboroshi.vessel.Loader
 description: A highly customizable Minecraft plugin for containing mobs in a vessel.

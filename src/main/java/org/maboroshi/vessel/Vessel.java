@@ -86,11 +86,11 @@ public final class Vessel extends JavaPlugin {
             configManager.loadConfig();
             configManager.loadMessages();
             this.messageUtils = new MessageUtils(this.configManager);
-            
+
             if (cooldownHandler != null) {
                 cooldownHandler.clearCooldowns();
             }
-            
+
             return true;
         } catch (Exception e) {
             log.error("Failed to reload Vessel configuration: " + e.getMessage());

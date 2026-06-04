@@ -28,7 +28,7 @@ public class VesselCommand {
     void execute(@Context CommandSender sender) {
         MessageUtils messageUtils = plugin.getMessageUtils();
         ConfigManager config = plugin.getConfigManager();
-        
+
         messageUtils.send(
                 sender,
                 config.getMessageConfig().commands.pluginInfo,
@@ -43,11 +43,11 @@ public class VesselCommand {
         if (plugin.reload()) {
             plugin.getMessageUtils().send(sender, plugin.getConfigManager().getMessageConfig().general.reloadSuccess);
         } else {
-            plugin.getMessageUtils().send(
-                    sender, 
-                    plugin.getConfigManager().getMessageConfig().general.reloadFail,
-                    plugin.getMessageUtils().tag("error", "Check console for details")
-            );
+            plugin.getMessageUtils()
+                    .send(
+                            sender,
+                            plugin.getConfigManager().getMessageConfig().general.reloadFail,
+                            plugin.getMessageUtils().tag("error", "Check console for details"));
         }
     }
 
@@ -56,7 +56,7 @@ public class VesselCommand {
     void help(@Context CommandSender sender) {
         MessageUtils messageUtils = plugin.getMessageUtils();
         ConfigManager config = plugin.getConfigManager();
-        
+
         messageUtils.send(sender, config.getMessageConfig().help.header);
         messageUtils.send(sender, config.getMessageConfig().help.show);
         messageUtils.send(sender, config.getMessageConfig().help.give);
@@ -74,7 +74,7 @@ public class VesselCommand {
         MessageUtils messageUtils = plugin.getMessageUtils();
         ConfigManager config = plugin.getConfigManager();
         Logger log = plugin.getPluginLogger();
-        
+
         ItemStack item = plugin.getVesselManager().createEmptyVessel(type);
         if (item == null) {
             messageUtils.send(sender, config.getMessageConfig().commands.invalidType);
