@@ -115,7 +115,8 @@ public class CaptureListener implements Listener {
         }
 
         if (exclusions.tamed && target instanceof Tameable tameable && tameable.isTamed()) {
-            if (tameable.getOwner() != null && !tameable.getOwner().getUniqueId().equals(player.getUniqueId())) {
+            if (tameable.getOwner() != null
+                    && !tameable.getOwner().getUniqueId().equals(player.getUniqueId())) {
                 messageUtils.send(player, config.getMessageConfig().general.cannotCaptureTamed);
                 return;
             }

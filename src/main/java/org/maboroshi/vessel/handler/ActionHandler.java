@@ -29,7 +29,7 @@ public class ActionHandler {
 
         for (CommandAction action : commands) {
             if (!action.global && action.permission != null && !action.permission.isEmpty()) {
-                Player onlinePlayer = player instanceof Player ? (Player) player : null;
+                Player onlinePlayer = player.getPlayer();
                 if (onlinePlayer != null && !onlinePlayer.hasPermission(action.permission)) {
                     continue;
                 }
@@ -70,25 +70,23 @@ public class ActionHandler {
     private void dispatch(OfflinePlayer player, String command) {
         if (command == null || command.isEmpty()) return;
 
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            String parsed = command;
-            if (player != null) {
-                String name = player.getName();
-                parsed = parsed.replace("<player>", name != null ? name : "Unknown")
-                        .replace("<uuid>", player.getUniqueId().toString());
-            }
+        String parsed = command;
+        if (player != null) {
+            String name = player.getName();
+            parsed = parsed.replace("<player>", name != null ? name : "Unknown")
+                    .replace("<uuid>", player.getUniqueId().toString());
+        }
 
-            if (player instanceof Player online && hasPAPI) {
-                parsed = PlaceholderAPI.setPlaceholders(online, parsed);
-            }
+        if (player != null && hasPAPI) {
+            parsed = PlaceholderAPI.setPlaceholders(player, parsed);
+        }
 
-            if (parsed.startsWith("/")) {
-                parsed = parsed.substring(1);
-            }
+        if (parsed.startsWith("/")) {
+            parsed = parsed.substring(1);
+        }
 
-            final String finalCommand = parsed;
-            Bukkit.getScheduler()
-                    .runTask(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand));
-        });
+        final String finalCommand = parsed;
+        Bukkit.getGlobalRegionScheduler()
+                .execute(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand));
     }
 }
