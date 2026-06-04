@@ -99,7 +99,7 @@ jobs:
         uses: HSGamer/action-mcreleaser@main
         with:
           files: ${{ github.event_name == 'release' && '' || 'build/libs/*.jar' }}
-          platforms: ${{ github.event_name == 'release' && 'modrinth,hangar,discord' || 'modrinth,hangar' }}
+          platforms: modrinth,hangar
         env:
           NAME: ${{ needs.build.outputs.resolved-version }}
           VERSION: ${{ needs.build.outputs.resolved-version }}
@@ -113,9 +113,3 @@ jobs:
           HANGAR_PROJECT: vessel
           HANGAR_PLATFORM: PAPER
           HANGAR_CHANNEL: ${{ github.event_name == 'release' && 'Release' || 'Beta' }}
-
-          DISCORD_URL: ${{ secrets.DISCORD_BUILD_WEBHOOK_URL }}
-          DISCORD_FILE: ".github/workflows/discord-embed.json"
-          DISCORD_PROFILE_NAME: "Vessel"
-          DISCORD_PROFILE_AVATAR: "https://raw.githubusercontent.com/MaboroshiKobo/branding/refs/heads/main/projects/vessel/vessel.avif"
-          DISCORD_MENTIONS: '<@&1510681285373329500>'
