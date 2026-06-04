@@ -63,10 +63,27 @@ jobs:
     if: github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
       - name: Download artifact
         uses: actions/download-artifact@v8
         with:
           path: build/libs
+
+      - name: Clean previous beta files
+        if: github.event_name != 'release'
+        run: |
+          echo "Fetching current beta assets..."
+          assets=$(gh release view beta --json assets --jq '.assets[].name' 2>/dev/null || echo "")
+          for asset in $assets; do
+            if [[ "$asset" == *.jar ]]; then
+              echo "Deleting old asset: $asset"
+              gh release delete-asset beta "$asset" -y || true
+            fi
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v3
@@ -77,13 +94,12 @@ jobs:
           name: ${{ github.event_name == 'release' && github.event.release.name || 'Beta Build' }}
           body: ${{ github.event_name == 'release' && github.event.release.body || github.event.head_commit.message }}
           prerelease: ${{ github.event_name != 'release' }}
-          force_update_files: true
 
       - name: Publish to Modrinth & Hangar
         uses: HSGamer/action-mcreleaser@main
         with:
-          files: build/libs/*.jar
-          platforms: modrinth,hangar
+          files: ${{ github.event_name == 'release' && '' || 'build/libs/*.jar' }}
+          platforms: ${{ github.event_name == 'release' && 'modrinth,hangar,discord' || 'modrinth,hangar' }}
         env:
           NAME: ${{ needs.build.outputs.resolved-version }}
           VERSION: ${{ needs.build.outputs.resolved-version }}
@@ -97,3 +113,9 @@ jobs:
           HANGAR_PROJECT: vessel
           HANGAR_PLATFORM: PAPER
           HANGAR_CHANNEL: ${{ github.event_name == 'release' && 'Release' || 'Beta' }}
+
+          DISCORD_URL: ${{ secrets.DISCORD_BUILD_WEBHOOK_URL }}
+          DISCORD_FILE: ".github/workflows/discord-embed.json"
+          DISCORD_PROFILE_NAME: "Vessel"
+          DISCORD_PROFILE_AVATAR: "https://raw.githubusercontent.com/MaboroshiKobo/branding/refs/heads/main/projects/vessel/vessel.avif"
+          DISCORD_MENTIONS: '<@&1510681285373329500>'

@@ -1,0 +1,15 @@
+{
+  "embeds": [
+    {
+      "title": "[MaboroshiKobo](https://github.com/MaboroshiKobo)/[Vessel](https://github.com/MaboroshiKobo/Vessel)",
+      "description": "%description%",
+      "color": 3066993,
+      "fields": [
+        {
+          "name": "Links",
+          "value": "[Modrinth](https://modrinth.com/plugin/vessel)\n[Hangar](https://hangar.papermc.io/maboroshi/vessel)\n[GitHub](https://github.com/MaboroshiKobo/Vessel/releases)"
+        }
+      ]
+    }
+  ]
+}
