@@ -18,20 +18,17 @@ import org.maboroshi.vessel.util.MessageUtils;
 public class VesselCommand {
 
     private final Vessel plugin;
-    private final ConfigManager config;
-    private final MessageUtils messageUtils;
-    private final Logger log;
 
     public VesselCommand(Vessel plugin) {
         this.plugin = plugin;
-        this.config = plugin.getConfigManager();
-        this.messageUtils = plugin.getMessageUtils();
-        this.log = plugin.getPluginLogger();
     }
 
     @Execute
     @Permission("vessel.command")
     void execute(@Context CommandSender sender) {
+        MessageUtils messageUtils = plugin.getMessageUtils();
+        ConfigManager config = plugin.getConfigManager();
+        
         messageUtils.send(
                 sender,
                 config.getMessageConfig().commands.pluginInfo,
@@ -41,23 +38,25 @@ public class VesselCommand {
     }
 
     @Execute(name = "reload")
-    @Permission("vessel.command.reload")
-    void reload(@Context CommandSender sender) {
-        try {
-            config.loadConfig();
-            config.loadMessages();
-            messageUtils.send(sender, config.getMessageConfig().general.reloadSuccess);
-            log.info("Configuration reloaded by " + sender.getName());
-        } catch (Exception e) {
-            messageUtils.send(
-                    sender, config.getMessageConfig().general.reloadFail, messageUtils.tag("error", e.getMessage()));
-            log.error("Failed to reload configuration: " + e.getMessage());
+    @Permission("vessel.admin.reload")
+    public void onReload(@Context CommandSender sender) {
+        if (plugin.reload()) {
+            plugin.getMessageUtils().send(sender, plugin.getConfigManager().getMessageConfig().general.reloadSuccess);
+        } else {
+            plugin.getMessageUtils().send(
+                    sender, 
+                    plugin.getConfigManager().getMessageConfig().general.reloadFail,
+                    plugin.getMessageUtils().tag("error", "Check console for details")
+            );
         }
     }
 
     @Execute(name = "help")
     @Permission("vessel.command.help")
     void help(@Context CommandSender sender) {
+        MessageUtils messageUtils = plugin.getMessageUtils();
+        ConfigManager config = plugin.getConfigManager();
+        
         messageUtils.send(sender, config.getMessageConfig().help.header);
         messageUtils.send(sender, config.getMessageConfig().help.show);
         messageUtils.send(sender, config.getMessageConfig().help.give);
@@ -72,6 +71,10 @@ public class VesselCommand {
             @Arg String type,
             @Arg int amount,
             @Flag({"-silent", "-s"}) boolean isSilent) {
+        MessageUtils messageUtils = plugin.getMessageUtils();
+        ConfigManager config = plugin.getConfigManager();
+        Logger log = plugin.getPluginLogger();
+        
         ItemStack item = plugin.getVesselManager().createEmptyVessel(type);
         if (item == null) {
             messageUtils.send(sender, config.getMessageConfig().commands.invalidType);

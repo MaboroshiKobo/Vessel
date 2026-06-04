@@ -65,7 +65,7 @@ public final class Vessel extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CaptureListener(this), this);
         getServer().getPluginManager().registerEvents(new ReleaseListener(this), this);
 
-        this.commandManager = LiteBukkitFactory.builder("fallback-prefix", this)
+        this.commandManager = LiteBukkitFactory.builder("vessel", this)
                 .commands(new VesselCommand(this))
                 .argumentSuggestion(String.class, ArgumentKey.of("type"), SuggestionResult.of("consumable", "reusable"))
                 .argumentSuggestion(
@@ -79,6 +79,23 @@ public final class Vessel extends JavaPlugin {
         Metrics metrics = new Metrics(this, 31642);
 
         new UpdateChecker(this).checkForUpdates();
+    }
+
+    public boolean reload() {
+        try {
+            configManager.loadConfig();
+            configManager.loadMessages();
+            this.messageUtils = new MessageUtils(this.configManager);
+            
+            if (cooldownHandler != null) {
+                cooldownHandler.clearCooldowns();
+            }
+            
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to reload Vessel configuration: " + e.getMessage());
+            return false;
+        }
     }
 
     @Override

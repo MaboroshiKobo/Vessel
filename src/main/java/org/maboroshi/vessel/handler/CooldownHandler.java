@@ -17,4 +17,8 @@ public class CooldownHandler {
     public void setCooldown(UUID playerId) {
         interactionCooldowns.put(playerId, System.currentTimeMillis());
     }
+
+    public void clearCooldowns() {
+        interactionCooldowns.invalidateAll();
+    }
 }
