@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntitySnapshot;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import org.bukkit.event.EventHandler;
@@ -57,6 +58,11 @@ public class CaptureListener implements Listener {
             return;
         }
 
+        Entity target = event.getRightClicked();
+        if (!(target instanceof Mob)) {
+            return;
+        }
+
         String tier = handMeta.getPersistentDataContainer().get(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING);
         boolean isConsumable = "consumable".equals(tier);
         boolean isReusable = "reusable".equals(tier);
@@ -85,7 +91,6 @@ public class CaptureListener implements Listener {
             return;
         }
 
-        Entity target = event.getRightClicked();
         Location captureLocation = target.getLocation();
 
         if (!plugin.getProtectionService().canCapture(player, captureLocation)) {
