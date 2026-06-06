@@ -38,15 +38,15 @@ public class VesselCommand {
     }
 
     @Execute(name = "reload")
-    @Permission("vessel.admin.reload")
+    @Permission("vessel.command.reload")
     public void onReload(@Context CommandSender sender) {
         if (plugin.reload()) {
-            plugin.getMessageUtils().send(sender, plugin.getConfigManager().getMessageConfig().admin.reloadSuccess);
+            plugin.getMessageUtils().send(sender, plugin.getConfigManager().getMessageConfig().commands.reloadSuccess);
         } else {
             plugin.getMessageUtils()
                     .send(
                             sender,
-                            plugin.getConfigManager().getMessageConfig().admin.reloadFail,
+                            plugin.getConfigManager().getMessageConfig().commands.reloadFail,
                             plugin.getMessageUtils().tag("error", "Check console for details"));
         }
     }

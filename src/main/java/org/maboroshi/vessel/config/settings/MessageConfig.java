@@ -30,36 +30,31 @@ public class MessageConfig {
         @Comment("Command-related messages and responses.")
         public CommandMessages commands = new CommandMessages();
 
-        @Comment("Administrative messages.")
-        public AdminMessages admin = new AdminMessages();
-
         @Comment("Help command messages and entry format.")
         public HelpMessages help = new HelpMessages();
 
         @Configuration
         public static class GeneralMessages {
-            @Comment("Message shown when a player lacks permission to use a vessel.")
+            @Comment("Message shown when a player lacks permission to use a vessel entirely.")
             public String cannotUseVessel = "<red>You cannot use this vessel!</red>";
 
-            @Comment("Message shown when a player lacks permission to capture this entity.")
+            @Comment("Message shown when a player lacks permission node access to capture a specific entity class.")
             public String cannotCapture = "<red>You cannot capture <entity_type>!</red>";
 
-            @Comment("Message shown when a player lacks permission to release this entity.")
+            @Comment("Message shown when a player lacks permission node access to release a specific entity class.")
             public String cannotRelease = "<red>You cannot release <entity_type>!</red>";
 
-            @Comment("Message shown when a player tries to capture another player's tamed pet.")
-            public String cannotCaptureTamed = "<red>You cannot capture someone else's pet!</red>";
+            @Comment("Message shown when a player tries to capture their own tamed pet while disallowed.")
+            public String cannotCaptureTamed = "<red>You cannot capture your own pet!</red>";
 
-            @Comment("Message shown when a player tries to release a tamed mob that is excluded.")
-            public String cannotReleaseTamed = "<red>You cannot release this pet!</red>";
+            @Comment("Message shown when a player tries to capture another player's tamed pet while disallowed.")
+            public String cannotCaptureOthersTamed = "<red>You cannot capture someone else's pet!</red>";
 
             @Comment("Message shown when a player tries to capture a named mob while named mobs are excluded.")
             public String cannotCaptureNamed = "<red>You cannot capture this named mob!</red>";
 
-            @Comment("Message shown when a player tries to release a named mob while named mobs are excluded.")
-            public String cannotReleaseNamed = "<red>You cannot release this named mob!</red>";
-
-            @Comment("Message shown when a player attempts to use the vessel on a blacklisted entity or spawn reason.")
+            @Comment(
+                    "Message shown when a player attempts to use the vessel on a blacklisted entity type or restricted spawn reason.")
             public String blacklistedEntity = "<red>You cannot use the vessel on <entity_type>!</red>";
 
             @Comment("Message shown when a player cannot capture in the current protected area.")
@@ -80,6 +75,12 @@ public class MessageConfig {
             @Comment("Plugin info message shown by /vessel. Supports <version> and <authors> tags.")
             public String pluginInfo = "<green>Vessel Plugin v<version> by <authors>.</green>";
 
+            @Comment("Message shown when reload succeeds.")
+            public String reloadSuccess = "<green>Vessel configuration reloaded.</green>";
+
+            @Comment("Message shown when reload fails.")
+            public String reloadFail = "<red>Failed to reload configuration: <error></red>";
+
             @Comment("Invalid type message")
             public String invalidType =
                     "<red>Invalid vessel type or module disabled! Valid types: consumable, reusable.</red>";
@@ -92,15 +93,6 @@ public class MessageConfig {
 
             @Comment("Message sent to player when receiving vessels. Supports <amount>, <type> tags.")
             public String givePlayer = "<green>You received <amount> <type> vessel(s).</green>";
-        }
-
-        @Configuration
-        public static class AdminMessages {
-            @Comment("Message shown when reload succeeds.")
-            public String reloadSuccess = "<green>Vessel configuration reloaded.</green>";
-
-            @Comment("Message shown when reload fails.")
-            public String reloadFail = "<red>Failed to reload configuration: <error></red>";
         }
 
         @Configuration

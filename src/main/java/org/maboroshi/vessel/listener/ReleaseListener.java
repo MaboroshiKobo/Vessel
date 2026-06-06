@@ -32,7 +32,6 @@ import org.maboroshi.vessel.api.event.VesselReleaseEvent;
 import org.maboroshi.vessel.config.ConfigManager;
 import org.maboroshi.vessel.config.settings.modules.ConsumableConfiguration;
 import org.maboroshi.vessel.config.settings.modules.ReusableConfiguration;
-import org.maboroshi.vessel.config.settings.shared.ExclusionConfiguration;
 import org.maboroshi.vessel.config.settings.shared.FilterConfiguration;
 import org.maboroshi.vessel.config.settings.shared.FilterMode;
 import org.maboroshi.vessel.handler.CooldownHandler;
@@ -88,8 +87,6 @@ public class ReleaseListener implements Listener {
 
         ConsumableConfiguration consumableConfig = config.getConsumableConfig();
         ReusableConfiguration reusableConfig = config.getReusableConfig();
-        ExclusionConfiguration exclusions =
-                "consumable".equals(vesselType) ? consumableConfig.exclusions : reusableConfig.exclusions;
         FilterConfiguration worldFilter =
                 "consumable".equals(vesselType) ? consumableConfig.worlds : reusableConfig.worlds;
 
@@ -135,19 +132,6 @@ public class ReleaseListener implements Listener {
                 .get(NamespacedKeys.CAPTURED_ENTITY_NAME, PersistentDataType.STRING);
         String storedSpawnReason =
                 handMeta.getPersistentDataContainer().get(NamespacedKeys.SPAWN_REASON, PersistentDataType.STRING);
-
-        if (exclusions.tamed && pendingEntity instanceof Tameable tameable && tameable.isTamed()) {
-            messageUtils.send(player, config.getMessageConfig().general.cannotReleaseTamed);
-            return;
-        }
-
-        if (exclusions.named && pendingEntity.customName() != null) {
-            messageUtils.send(
-                    player,
-                    config.getMessageConfig().general.cannotReleaseNamed,
-                    messageUtils.tag("entity_type", entityType));
-            return;
-        }
 
         VesselReleaseEvent releaseEvent = new VesselReleaseEvent(
                 player,

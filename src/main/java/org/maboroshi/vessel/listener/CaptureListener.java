@@ -129,11 +129,20 @@ public class CaptureListener implements Listener {
             }
         }
 
-        if (exclusions.tamed && target instanceof Tameable tameable && tameable.isTamed()) {
-            if (tameable.getOwner() != null
-                    && !tameable.getOwner().getUniqueId().equals(player.getUniqueId())) {
-                messageUtils.send(player, config.getMessageConfig().general.cannotCaptureTamed);
-                return;
+        if (target instanceof Tameable tameable && tameable.isTamed()) {
+            UUID ownerId = tameable.getOwnerUniqueId();
+            if (ownerId != null) {
+                if (ownerId.equals(player.getUniqueId())) {
+                    if (exclusions.tamed) {
+                        messageUtils.send(player, config.getMessageConfig().general.cannotCaptureTamed);
+                        return;
+                    }
+                } else {
+                    if (exclusions.othersTamed) {
+                        messageUtils.send(player, config.getMessageConfig().general.cannotCaptureOthersTamed);
+                        return;
+                    }
+                }
             }
         }
 
