@@ -24,11 +24,14 @@ public class MessageConfig {
         @Comment("The global prefix used in messages. Use <prefix> in other messages to include it.")
         public String prefix = "<color:#F2CDCD><bold>Vessel</bold> ➟ </color>";
 
-        @Comment("General messages used across the plugin.")
+        @Comment("Core gameplay messages for capturing and releasing entities.")
         public GeneralMessages general = new GeneralMessages();
 
         @Comment("Command-related messages and responses.")
         public CommandMessages commands = new CommandMessages();
+
+        @Comment("Administrative messages.")
+        public AdminMessages admin = new AdminMessages();
 
         @Comment("Help command messages and entry format.")
         public HelpMessages help = new HelpMessages();
@@ -56,15 +59,7 @@ public class MessageConfig {
             @Comment("Message shown when a player tries to release a named mob while named mobs are excluded.")
             public String cannotReleaseNamed = "<red>You cannot release this named mob!</red>";
 
-            @Comment("Message shown when a player tries to capture a mob spawned by a blacklisted reason.")
-            public String cannotCaptureSpawnReason =
-                    "<red>You cannot capture <entity_type> spawned by <spawn_reason>!</red>";
-
-            @Comment("Message shown when a player tries to release a mob spawned by a blacklisted reason.")
-            public String cannotReleaseSpawnReason =
-                    "<red>You cannot release <entity_type> spawned by <spawn_reason>!</red>";
-
-            @Comment("Message shown when a player attempts to use the vessel on a blacklisted entity.")
+            @Comment("Message shown when a player attempts to use the vessel on a blacklisted entity or spawn reason.")
             public String blacklistedEntity = "<red>You cannot use the vessel on <entity_type>!</red>";
 
             @Comment("Message shown when a player cannot capture in the current protected area.")
@@ -78,12 +73,6 @@ public class MessageConfig {
 
             @Comment("Message shown when a player cannot release in the current world.")
             public String cannotReleaseWorld = "<red>You cannot release mobs in <world>!</red>";
-
-            @Comment("Message shown when reload succeeds.")
-            public String reloadSuccess = "<green>Vessel configuration reloaded.</green>";
-
-            @Comment("Message shown when reload fails.")
-            public String reloadFail = "<red>Failed to reload configuration: <error></red>";
         }
 
         @Configuration
@@ -103,6 +92,15 @@ public class MessageConfig {
 
             @Comment("Message sent to player when receiving vessels. Supports <amount>, <type> tags.")
             public String givePlayer = "<green>You received <amount> <type> vessel(s).</green>";
+        }
+
+        @Configuration
+        public static class AdminMessages {
+            @Comment("Message shown when reload succeeds.")
+            public String reloadSuccess = "<green>Vessel configuration reloaded.</green>";
+
+            @Comment("Message shown when reload fails.")
+            public String reloadFail = "<red>Failed to reload configuration: <error></red>";
         }
 
         @Configuration
