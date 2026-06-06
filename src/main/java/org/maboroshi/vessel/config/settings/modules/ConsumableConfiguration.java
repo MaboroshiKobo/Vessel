@@ -19,7 +19,11 @@ public class ConsumableConfiguration {
     @Comment("World filter for consumable vessels.")
     public FilterConfiguration worlds = new FilterConfiguration();
 
-    @Comment("Entity filter for consumable vessels.")
+    @Comment({
+        "Entity filter for consumable vessels.",
+        "For a full list of supported group permissions and their included mobs, see:",
+        "https://docs.maboroshi.org/projects/vessel/features/commands-permissions/"
+    })
     public FilterConfiguration entities =
             new FilterConfiguration(FilterMode.BLACKLIST, ModuleSettings.DEFAULT_ENTITY_BLACKLIST);
 
