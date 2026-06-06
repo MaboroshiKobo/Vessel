@@ -4,10 +4,20 @@ import java.util.Locale;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Ambient;
+import org.bukkit.entity.Animals;
+import org.bukkit.entity.Boss;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntitySnapshot;
+import org.bukkit.entity.Fish;
+import org.bukkit.entity.Golem;
+import org.bukkit.entity.Illager;
+import org.bukkit.entity.Monster;
+import org.bukkit.entity.NPC;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Raider;
 import org.bukkit.entity.Tameable;
+import org.bukkit.entity.WaterMob;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -109,8 +119,11 @@ public class ReleaseListener implements Listener {
 
         EntitySnapshot snapshot = plugin.getServer().getEntityFactory().createEntitySnapshot(capturedNBT);
         String entityType = snapshot.getEntityType().name().toLowerCase(Locale.ROOT);
+        Entity pendingEntity = snapshot.createEntity(releaseLocation.getWorld());
 
-        if (!player.hasPermission("vessel.release." + entityType) && !player.hasPermission("vessel.release.*")) {
+        if (!player.hasPermission("vessel.release.*")
+                && !player.hasPermission("vessel.release." + entityType)
+                && !hasGroupPermission(player, pendingEntity)) {
             messageUtils.send(
                     player,
                     config.getMessageConfig().general.cannotRelease,
@@ -123,14 +136,12 @@ public class ReleaseListener implements Listener {
         String storedSpawnReason =
                 handMeta.getPersistentDataContainer().get(NamespacedKeys.SPAWN_REASON, PersistentDataType.STRING);
 
-        Entity releasedEntity = snapshot.createEntity(releaseLocation.getWorld());
-
-        if (exclusions.tamed && releasedEntity instanceof Tameable tameable && tameable.isTamed()) {
+        if (exclusions.tamed && pendingEntity instanceof Tameable tameable && tameable.isTamed()) {
             messageUtils.send(player, config.getMessageConfig().general.cannotReleaseTamed);
             return;
         }
 
-        if (exclusions.named && releasedEntity.customName() != null) {
+        if (exclusions.named && pendingEntity.customName() != null) {
             messageUtils.send(
                     player,
                     config.getMessageConfig().general.cannotReleaseNamed,
@@ -150,7 +161,7 @@ public class ReleaseListener implements Listener {
         if (releaseEvent.isCancelled()) return;
 
         CreatureSpawnEvent.SpawnReason spawnReason = resolveSpawnReason(storedSpawnReason);
-        if (!releasedEntity.spawnAt(releaseLocation, spawnReason)) return;
+        if (!pendingEntity.spawnAt(releaseLocation, spawnReason)) return;
 
         if ("consumable".equals(vesselType)) {
             handItem.subtract();
@@ -178,6 +189,21 @@ public class ReleaseListener implements Listener {
         }
 
         cooldownHandler.setCooldown(player.getUniqueId());
+    }
+
+    private boolean hasGroupPermission(Player player, Entity target) {
+        if (target instanceof Animals && player.hasPermission("vessel.release.animals")) return true;
+        if (target instanceof Monster && player.hasPermission("vessel.release.monsters")) return true;
+        if (target instanceof Golem && player.hasPermission("vessel.release.golems")) return true;
+        if (target instanceof Fish && player.hasPermission("vessel.release.fish")) return true;
+        if (target instanceof WaterMob && player.hasPermission("vessel.release.watermobs")) return true;
+        if (target instanceof Ambient && player.hasPermission("vessel.release.ambient")) return true;
+        if (target instanceof Raider && player.hasPermission("vessel.release.raiders")) return true;
+        if (target instanceof Boss && player.hasPermission("vessel.release.bosses")) return true;
+        if (target instanceof Illager && player.hasPermission("vessel.release.illagers")) return true;
+        if (target instanceof Tameable && player.hasPermission("vessel.release.tameable")) return true;
+        if (target instanceof NPC && player.hasPermission("vessel.release.npcs")) return true;
+        return false;
     }
 
     private CreatureSpawnEvent.SpawnReason resolveSpawnReason(String storedSpawnReason) {

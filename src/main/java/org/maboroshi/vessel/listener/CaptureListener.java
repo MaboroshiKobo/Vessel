@@ -4,11 +4,21 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import org.bukkit.Location;
+import org.bukkit.entity.Ambient;
+import org.bukkit.entity.Animals;
+import org.bukkit.entity.Boss;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntitySnapshot;
+import org.bukkit.entity.Fish;
+import org.bukkit.entity.Golem;
+import org.bukkit.entity.Illager;
 import org.bukkit.entity.Mob;
+import org.bukkit.entity.Monster;
+import org.bukkit.entity.NPC;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Raider;
 import org.bukkit.entity.Tameable;
+import org.bukkit.entity.WaterMob;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -147,7 +157,9 @@ public class CaptureListener implements Listener {
             return;
         }
 
-        if (!player.hasPermission("vessel.capture." + entityType) && !player.hasPermission("vessel.capture.*")) {
+        if (!player.hasPermission("vessel.capture.*")
+                && !player.hasPermission("vessel.capture." + entityType)
+                && !hasGroupPermission(player, target)) {
             messageUtils.send(
                     player,
                     config.getMessageConfig().general.cannotCapture,
@@ -215,6 +227,21 @@ public class CaptureListener implements Listener {
 
         target.remove();
         plugin.getCooldownHandler().setCooldown(player.getUniqueId());
+    }
+
+    private boolean hasGroupPermission(Player player, Entity target) {
+        if (target instanceof Animals && player.hasPermission("vessel.capture.animals")) return true;
+        if (target instanceof Monster && player.hasPermission("vessel.capture.monsters")) return true;
+        if (target instanceof Golem && player.hasPermission("vessel.capture.golems")) return true;
+        if (target instanceof Fish && player.hasPermission("vessel.capture.fish")) return true;
+        if (target instanceof WaterMob && player.hasPermission("vessel.capture.watermobs")) return true;
+        if (target instanceof Ambient && player.hasPermission("vessel.capture.ambient")) return true;
+        if (target instanceof Raider && player.hasPermission("vessel.capture.raiders")) return true;
+        if (target instanceof Boss && player.hasPermission("vessel.capture.bosses")) return true;
+        if (target instanceof Illager && player.hasPermission("vessel.capture.illagers")) return true;
+        if (target instanceof Tameable && player.hasPermission("vessel.capture.tameable")) return true;
+        if (target instanceof NPC && player.hasPermission("vessel.capture.npcs")) return true;
+        return false;
     }
 
     private boolean isAllowed(String value, FilterConfiguration filter) {
