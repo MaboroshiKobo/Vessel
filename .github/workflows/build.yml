@@ -73,29 +73,15 @@ jobs:
         with:
           path: build/libs
 
-      - name: Clean previous beta files
-        if: github.event_name != 'release'
-        run: |
-          echo "Fetching current beta assets..."
-          assets=$(gh release view beta --json assets --jq '.assets[].name' 2>/dev/null || echo "")
-          for asset in $assets; do
-            if [[ "$asset" == *.jar ]]; then
-              echo "Deleting old asset: $asset"
-              gh release delete-asset beta "$asset" -y || true
-            fi
-          done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Upload to GitHub Release
+        if: github.event_name == 'release'
         uses: softprops/action-gh-release@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: build/libs/*.jar
-          tag_name: ${{ github.event_name == 'release' && github.event.release.tag_name || 'beta' }}
-          name: ${{ github.event_name == 'release' && github.event.release.name || 'Beta Build' }}
-          body: ${{ github.event_name == 'release' && github.event.release.body || github.event.head_commit.message }}
-          prerelease: ${{ github.event_name != 'release' }}
+          tag_name: ${{ github.event.release.tag_name }}
+          name: ${{ github.event.release.name }}
+          body: ${{ github.event.release.body }}
 
       - name: Publish to Modrinth & Hangar
         uses: HSGamer/action-mcreleaser@main
