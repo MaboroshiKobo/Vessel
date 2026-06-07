@@ -15,12 +15,10 @@ public class Loader implements PluginLoader {
         resolver.addRepository(
                 new RemoteRepository.Builder("papermc", "default", "https://repo.papermc.io/repository/maven-public/")
                         .build());
-        resolver.addRepository(
-                new RemoteRepository.Builder("panda-lang", "default", "https://repo.panda-lang.org/releases").build());
 
         resolver.addDependency(new Dependency(new DefaultArtifact("de.exlll:configlib-paper:4.8.1"), null));
-        resolver.addDependency(new Dependency(new DefaultArtifact("dev.rollczi:litecommands-bukkit:3.10.9"), null));
-        resolver.addDependency(new Dependency(new DefaultArtifact("dev.rollczi:litecommands-folia:3.10.9"), null));
+        resolver.addDependency(new Dependency(new DefaultArtifact("org.incendo:cloud-paper:2.0.0-beta.15"), null));
+        resolver.addDependency(new Dependency(new DefaultArtifact("org.incendo:cloud-annotations:2.0.0"), null));
 
         classpathBuilder.addLibrary(resolver);
     }

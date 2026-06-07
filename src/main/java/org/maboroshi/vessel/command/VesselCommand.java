@@ -1,20 +1,23 @@
 package org.maboroshi.vessel.command;
 
-import dev.rollczi.litecommands.annotations.argument.Arg;
-import dev.rollczi.litecommands.annotations.command.Command;
-import dev.rollczi.litecommands.annotations.context.Context;
-import dev.rollczi.litecommands.annotations.execute.Execute;
-import dev.rollczi.litecommands.annotations.flag.Flag;
-import dev.rollczi.litecommands.annotations.permission.Permission;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import java.util.List;
+import java.util.stream.IntStream;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.incendo.cloud.annotations.Argument;
+import org.incendo.cloud.annotations.Command;
+import org.incendo.cloud.annotations.Flag;
+import org.incendo.cloud.annotations.Permission;
+import org.incendo.cloud.annotations.suggestion.Suggestions;
+import org.incendo.cloud.context.CommandContext;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.config.ConfigManager;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
 
-@Command(name = "vessel")
 public class VesselCommand {
 
     private final Vessel plugin;
@@ -23,23 +26,42 @@ public class VesselCommand {
         this.plugin = plugin;
     }
 
-    @Execute
-    @Permission("vessel.command")
-    void execute(@Context CommandSender sender) {
+    @Suggestions("vesselTypes")
+    public List<String> suggestVesselTypes(CommandContext<CommandSourceStack> context, String input) {
+        return List.of("consumable", "reusable");
+    }
+
+    @Suggestions("vesselAmounts")
+    public List<String> suggestVesselAmounts(CommandContext<CommandSourceStack> context, String input) {
+        return IntStream.rangeClosed(1, 64).mapToObj(String::valueOf).toList();
+    }
+
+    @Command("vessel [fallback]")
+    @Permission("vessel.command.help")
+    public void onHelpFallback(CommandSourceStack source, @Argument("fallback") @Nullable String fallback) {
+        help(source);
+    }
+
+    @Command("vessel about")
+    @Permission("vessel.command.about")
+    public void onAbout(CommandSourceStack source) {
+        CommandSender sender = source.getSender();
         MessageUtils messageUtils = plugin.getMessageUtils();
         ConfigManager config = plugin.getConfigManager();
 
         messageUtils.send(
                 sender,
-                config.getMessageConfig().commands.pluginInfo,
+                config.getMessageConfig().prefix
+                        + "Plugin Version: <gray><version></gray>, Authors: <gray><authors></gray>",
                 messageUtils.tag("version", plugin.getPluginMeta().getVersion()),
                 messageUtils.tag(
                         "authors", String.join(", ", plugin.getPluginMeta().getAuthors())));
     }
 
-    @Execute(name = "reload")
+    @Command("vessel reload")
     @Permission("vessel.command.reload")
-    public void onReload(@Context CommandSender sender) {
+    public void onReload(CommandSourceStack source) {
+        CommandSender sender = source.getSender();
         if (plugin.reload()) {
             plugin.getMessageUtils().send(sender, plugin.getConfigManager().getMessageConfig().commands.reloadSuccess);
         } else {
@@ -51,35 +73,34 @@ public class VesselCommand {
         }
     }
 
-    @Execute(name = "help")
+    @Command("vessel help")
     @Permission("vessel.command.help")
-    void help(@Context CommandSender sender) {
+    public void help(CommandSourceStack source) {
+        CommandSender sender = source.getSender();
         MessageUtils messageUtils = plugin.getMessageUtils();
         ConfigManager config = plugin.getConfigManager();
 
         messageUtils.send(sender, config.getMessageConfig().help.header);
-        messageUtils.send(sender, config.getMessageConfig().help.show);
+        messageUtils.send(sender, config.getMessageConfig().help.about);
+        messageUtils.send(sender, config.getMessageConfig().help.help);
         messageUtils.send(sender, config.getMessageConfig().help.give);
         messageUtils.send(sender, config.getMessageConfig().help.reload);
     }
 
-    @Execute(name = "give")
+    @Command("vessel give <player> <type> <amount>")
     @Permission("vessel.command.give")
-    void give(
-            @Context CommandSender sender,
-            @Arg Player player,
-            @Arg String type,
-            @Arg int amount,
-            @Flag({"-silent", "-s"}) boolean isSilent) {
+    public void give(
+            CommandSourceStack source,
+            @Argument("player") Player player,
+            @Argument(value = "type", suggestions = "vesselTypes") String type,
+            @Argument(value = "amount", suggestions = "vesselAmounts") int amount,
+            @Flag(value = "silent", aliases = "s") boolean isSilent) {
+
+        CommandSender sender = source.getSender();
         MessageUtils messageUtils = plugin.getMessageUtils();
         ConfigManager config = plugin.getConfigManager();
         Logger log = plugin.getPluginLogger();
 
-        ItemStack item = plugin.getVesselManager().createEmptyVessel(type);
-        if (item == null) {
-            messageUtils.send(sender, config.getMessageConfig().commands.invalidType);
-            return;
-        }
         if (amount < 1 || amount > 64) {
             messageUtils.send(
                     sender,
@@ -88,6 +109,13 @@ public class VesselCommand {
                     messageUtils.tag("max", 64));
             return;
         }
+
+        ItemStack item = plugin.getVesselManager().createEmptyVessel(type);
+        if (item == null) {
+            messageUtils.send(sender, config.getMessageConfig().commands.invalidType);
+            return;
+        }
+
         item.setAmount(amount);
 
         player.getInventory()

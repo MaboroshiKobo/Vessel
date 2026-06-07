@@ -1,14 +1,11 @@
 package org.maboroshi.vessel;
 
-import dev.rollczi.litecommands.LiteCommands;
-import dev.rollczi.litecommands.argument.ArgumentKey;
-import dev.rollczi.litecommands.bukkit.LiteBukkitFactory;
-import dev.rollczi.litecommands.folia.FoliaExtension;
-import dev.rollczi.litecommands.suggestion.SuggestionResult;
-import java.util.stream.IntStream;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bstats.bukkit.Metrics;
-import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.incendo.cloud.annotations.AnnotationParser;
+import org.incendo.cloud.execution.ExecutionCoordinator;
+import org.incendo.cloud.paper.PaperCommandManager;
 import org.maboroshi.vessel.command.VesselCommand;
 import org.maboroshi.vessel.config.ConfigManager;
 import org.maboroshi.vessel.handler.ActionHandler;
@@ -33,7 +30,6 @@ public final class Vessel extends JavaPlugin {
     private EffectHandler effectHandler;
     private CooldownHandler cooldownHandler;
     private ActionHandler actionHandler;
-    private LiteCommands<CommandSender> commandManager;
     private VesselManager vesselManager;
     private ProtectionService protectionService;
     private MessageUtils messageUtils;
@@ -66,16 +62,14 @@ public final class Vessel extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CaptureListener(this), this);
         getServer().getPluginManager().registerEvents(new ReleaseListener(this), this);
 
-        this.commandManager = LiteBukkitFactory.builder("vessel", this)
-                .commands(new VesselCommand(this))
-                .argumentSuggestion(String.class, ArgumentKey.of("type"), SuggestionResult.of("consumable", "reusable"))
-                .argumentSuggestion(
-                        int.class,
-                        SuggestionResult.of(IntStream.rangeClosed(1, 64)
-                                .mapToObj(String::valueOf)
-                                .toList()))
-                .extension(new FoliaExtension(this))
-                .build();
+        PaperCommandManager<CommandSourceStack> commandManager = PaperCommandManager.builder()
+                .executionCoordinator(ExecutionCoordinator.simpleCoordinator())
+                .buildOnEnable(this);
+
+        AnnotationParser<CommandSourceStack> annotationParser =
+                new AnnotationParser<>(commandManager, CommandSourceStack.class);
+
+        annotationParser.parse(new VesselCommand(this));
 
         @SuppressWarnings("unused")
         Metrics metrics = new Metrics(this, 31642);
@@ -101,11 +95,7 @@ public final class Vessel extends JavaPlugin {
     }
 
     @Override
-    public void onDisable() {
-        if (this.commandManager != null) {
-            this.commandManager.unregister();
-        }
-    }
+    public void onDisable() {}
 
     public static Vessel getPlugin() {
         return plugin;
