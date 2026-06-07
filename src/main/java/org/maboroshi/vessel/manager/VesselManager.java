@@ -11,8 +11,8 @@ import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.config.ConfigManager;
 import org.maboroshi.vessel.handler.ItemHandler;
+import org.maboroshi.vessel.util.Keys;
 import org.maboroshi.vessel.util.Logger;
-import org.maboroshi.vessel.util.NamespacedKeys;
 
 public class VesselManager {
     private final ConfigManager config;
@@ -33,7 +33,7 @@ public class VesselManager {
 
             ItemHandler.applyText(meta, config.getConsumableConfig().displayName, config.getConsumableConfig().lore);
 
-            meta.getPersistentDataContainer().set(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING, "consumable");
+            meta.getPersistentDataContainer().set(Keys.TYPE, PersistentDataType.STRING, "consumable");
             item.setItemMeta(meta);
             return item;
 
@@ -46,7 +46,7 @@ public class VesselManager {
 
             ItemHandler.applyText(meta, config.getReusableConfig().displayName, config.getReusableConfig().lore);
 
-            meta.getPersistentDataContainer().set(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING, "reusable");
+            meta.getPersistentDataContainer().set(Keys.TYPE, PersistentDataType.STRING, "reusable");
             item.setItemMeta(meta);
             return item;
         }

@@ -1,8 +1,10 @@
 package org.maboroshi.vessel.listener;
 
+import io.lumine.mythic.bukkit.MythicBukkit;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Ambient;
 import org.bukkit.entity.Animals;
@@ -35,9 +37,9 @@ import org.maboroshi.vessel.config.settings.shared.ExclusionConfiguration;
 import org.maboroshi.vessel.config.settings.shared.FilterConfiguration;
 import org.maboroshi.vessel.config.settings.shared.FilterMode;
 import org.maboroshi.vessel.handler.ItemHandler;
+import org.maboroshi.vessel.util.Keys;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
-import org.maboroshi.vessel.util.NamespacedKeys;
 
 public class CaptureListener implements Listener {
     private final Vessel plugin;
@@ -57,43 +59,42 @@ public class CaptureListener implements Listener {
         if (event.getHand() != EquipmentSlot.HAND) return;
 
         Player player = event.getPlayer();
-        ItemStack handItem = player.getInventory().getItemInMainHand();
+        ItemStack itemInHand = player.getInventory().getItemInMainHand();
 
-        if (!handItem.hasItemMeta()) return;
+        if (!itemInHand.hasItemMeta()) return;
 
-        ItemMeta handMeta = handItem.getItemMeta();
-        if (!handMeta.getPersistentDataContainer().has(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING)
-                || handMeta.getPersistentDataContainer()
-                        .has(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING)) {
+        ItemMeta meta = itemInHand.getItemMeta();
+        if (!meta.getPersistentDataContainer().has(Keys.TYPE, PersistentDataType.STRING)
+                || meta.getPersistentDataContainer().has(Keys.MOB_DATA, PersistentDataType.STRING)) {
             return;
         }
 
         Entity target = event.getRightClicked();
-        if (!(target instanceof Mob)) {
+        if (!(target instanceof Mob clickedMob)) {
             return;
         }
 
-        String tier = handMeta.getPersistentDataContainer().get(NamespacedKeys.VESSEL_TYPE, PersistentDataType.STRING);
-        boolean isConsumable = "consumable".equals(tier);
-        boolean isReusable = "reusable".equals(tier);
+        String vesselType = meta.getPersistentDataContainer().get(Keys.TYPE, PersistentDataType.STRING);
+        boolean consumable = "consumable".equals(vesselType);
+        boolean reusable = "reusable".equals(vesselType);
 
-        if (!isConsumable && !isReusable) return;
+        if (!consumable && !reusable) return;
 
-        if (!player.hasPermission("vessel.use." + tier)) {
+        if (!player.hasPermission("vessel.use." + vesselType)) {
             messageUtils.send(player, config.getMessageConfig().general.cannotUseVessel);
             return;
         }
 
         event.setCancelled(true);
 
-        boolean isEnabled = isConsumable ? config.getConsumableConfig().enabled : config.getReusableConfig().enabled;
-        if (!isEnabled) return;
+        boolean active = consumable ? config.getConsumableConfig().enabled : config.getReusableConfig().enabled;
+        if (!active) return;
 
-        ConsumableConfiguration consumableConfig = config.getConsumableConfig();
-        ReusableConfiguration reusableConfig = config.getReusableConfig();
+        ConsumableConfiguration oneUse = config.getConsumableConfig();
+        ReusableConfiguration multiUse = config.getReusableConfig();
 
-        FilterConfiguration worldFilter = isConsumable ? consumableConfig.worlds : reusableConfig.worlds;
-        if (!isAllowed(player.getWorld().getName(), worldFilter)) {
+        FilterConfiguration worlds = consumable ? oneUse.worlds : multiUse.worlds;
+        if (!isAllowed(player.getWorld().getName(), worlds)) {
             messageUtils.send(
                     player,
                     config.getMessageConfig().general.cannotCaptureWorld,
@@ -101,44 +102,41 @@ public class CaptureListener implements Listener {
             return;
         }
 
-        Location captureLocation = target.getLocation();
+        Location loc = clickedMob.getLocation();
 
-        if (!plugin.getProtectionService().canCapture(player, captureLocation)) {
+        if (!plugin.getProtectionService().canCapture(player, loc)) {
             messageUtils.send(player, config.getMessageConfig().general.cannotCaptureHere);
             return;
         }
 
-        String entityType = target.getType().name().toLowerCase(Locale.ROOT);
+        String mobId = clickedMob.getType().name().toLowerCase(Locale.ROOT);
+        ExclusionConfiguration rules = consumable ? oneUse.exclusions : multiUse.exclusions;
 
-        ExclusionConfiguration exclusions = isConsumable ? consumableConfig.exclusions : reusableConfig.exclusions;
-
-        if (target.getPersistentDataContainer().has(NamespacedKeys.SPAWN_REASON, PersistentDataType.STRING)) {
-            String spawnReason =
-                    target.getPersistentDataContainer().get(NamespacedKeys.SPAWN_REASON, PersistentDataType.STRING);
-            if (!isAllowed(spawnReason, exclusions.spawnReasons)) {
+        if (clickedMob.getPersistentDataContainer().has(Keys.SPAWN_REASON, PersistentDataType.STRING)) {
+            String reason = clickedMob.getPersistentDataContainer().get(Keys.SPAWN_REASON, PersistentDataType.STRING);
+            if (!isAllowed(reason, rules.spawnReasons)) {
                 messageUtils.send(
                         player,
                         config.getMessageConfig().general.blacklistedEntity,
-                        messageUtils.tag("entity_type", entityType),
-                        messageUtils.tag("spawn_reason", spawnReason),
+                        messageUtils.tag("entity_type", mobId),
+                        messageUtils.tag("spawn_reason", reason),
                         messageUtils.tagParsed(
-                                "entity_name", target.getName() != null ? target.getName() : entityType));
-                log.debug("Player " + player.getName() + " tried to capture entity spawned by reason " + spawnReason
-                        + ".");
+                                "entity_name", clickedMob.getName() != null ? clickedMob.getName() : mobId));
+                log.debug("Player " + player.getName() + " tried to capture entity spawned by reason " + reason + ".");
                 return;
             }
         }
 
-        if (target instanceof Tameable tameable && tameable.isTamed()) {
-            UUID ownerId = tameable.getOwnerUniqueId();
-            if (ownerId != null) {
-                if (ownerId.equals(player.getUniqueId())) {
-                    if (exclusions.tamed) {
+        if (clickedMob instanceof Tameable pet && pet.isTamed()) {
+            UUID owner = pet.getOwnerUniqueId();
+            if (owner != null) {
+                if (owner.equals(player.getUniqueId())) {
+                    if (rules.tamed) {
                         messageUtils.send(player, config.getMessageConfig().general.cannotCaptureTamed);
                         return;
                     }
                 } else {
-                    if (exclusions.othersTamed) {
+                    if (rules.othersTamed) {
                         messageUtils.send(player, config.getMessageConfig().general.cannotCaptureOthersTamed);
                         return;
                     }
@@ -146,95 +144,115 @@ public class CaptureListener implements Listener {
             }
         }
 
-        if (exclusions.named && target.customName() != null) {
+        if (rules.named && clickedMob.customName() != null) {
             messageUtils.send(
                     player,
                     config.getMessageConfig().general.cannotCaptureNamed,
-                    messageUtils.tag("entity_type", entityType));
+                    messageUtils.tag("entity_type", mobId));
             return;
         }
 
-        FilterConfiguration entityFilter = isConsumable ? consumableConfig.entities : reusableConfig.entities;
+        FilterConfiguration mobs = consumable ? oneUse.entities : multiUse.entities;
 
-        if (!isAllowed(entityType, entityFilter)) {
+        if (!isAllowed(mobId, mobs)) {
             log.debug("Player " + player.getName() + " tried to capture a disallowed entity.");
             messageUtils.send(
                     player,
                     config.getMessageConfig().general.blacklistedEntity,
-                    messageUtils.tag("entity_type", entityType),
-                    messageUtils.tagParsed("entity_name", target.getName() != null ? target.getName() : entityType));
+                    messageUtils.tag("entity_type", mobId),
+                    messageUtils.tagParsed("entity_name", clickedMob.getName() != null ? clickedMob.getName() : mobId));
             return;
         }
 
         if (!player.hasPermission("vessel.capture.*")
-                && !player.hasPermission("vessel.capture." + entityType)
-                && !hasGroupPermission(player, target)) {
+                && !player.hasPermission("vessel.capture." + mobId)
+                && !hasGroupPermission(player, clickedMob)) {
             messageUtils.send(
-                    player,
-                    config.getMessageConfig().general.cannotCapture,
-                    messageUtils.tag("entity_type", entityType));
+                    player, config.getMessageConfig().general.cannotCapture, messageUtils.tag("entity_type", mobId));
             return;
         }
 
         if (plugin.getCooldownHandler().isOnCooldown(player.getUniqueId(), config.getMainConfig().cooldown)) return;
 
-        ItemStack captureItem = handItem.clone();
-        captureItem.setAmount(1);
-        ItemMeta captureMeta = captureItem.getItemMeta();
+        ItemStack resultItem = itemInHand.clone();
+        resultItem.setAmount(1);
+        ItemMeta resultMeta = resultItem.getItemMeta();
 
-        EntitySnapshot snapshot = target.createSnapshot();
-        String safeEntityName =
-                target.getName() != null ? target.getName() : target.getType().toString();
-        captureMeta
-                .getPersistentDataContainer()
-                .set(NamespacedKeys.CAPTURED_ENTITY, PersistentDataType.STRING, snapshot.getAsString());
-        captureMeta
-                .getPersistentDataContainer()
-                .set(NamespacedKeys.CAPTURED_ENTITY_NAME, PersistentDataType.STRING, safeEntityName);
-        String spawnReason =
-                target.getPersistentDataContainer().get(NamespacedKeys.SPAWN_REASON, PersistentDataType.STRING);
-        if (spawnReason == null || spawnReason.isEmpty()) {
-            spawnReason = target.getEntitySpawnReason().name();
+        String targetName = clickedMob.getName() != null
+                ? clickedMob.getName()
+                : clickedMob.getType().toString();
+        String targetType = clickedMob.getType().toString();
+
+        if (Bukkit.getPluginManager().isPluginEnabled("MythicMobs")) {
+            var activeMobOpt = MythicBukkit.inst().getMobManager().getActiveMob(clickedMob.getUniqueId());
+            if (activeMobOpt.isPresent()) {
+                var activeMob = activeMobOpt.get();
+                String internalName = activeMob.getType().getInternalName();
+                resultMeta.getPersistentDataContainer().set(Keys.MYTHIC_ID, PersistentDataType.STRING, internalName);
+
+                targetType = internalName;
+                targetName = activeMob.getDisplayName() != null
+                                && !activeMob.getDisplayName().isEmpty()
+                        ? activeMob.getDisplayName()
+                        : internalName;
+            }
         }
-        captureMeta
-                .getPersistentDataContainer()
-                .set(NamespacedKeys.SPAWN_REASON, PersistentDataType.STRING, spawnReason);
-        captureMeta
-                .getPersistentDataContainer()
-                .set(
-                        NamespacedKeys.VESSEL_ID,
-                        PersistentDataType.STRING,
-                        UUID.randomUUID().toString());
 
-        String displayName =
-                isConsumable ? config.getConsumableConfig().displayName : config.getReusableConfig().displayName;
-        List<String> filledLore =
-                isConsumable ? config.getConsumableConfig().filledLore : config.getReusableConfig().filledLore;
+        final String finalName = targetName;
+        final String finalType = targetType;
+
+        EntitySnapshot snapshot = clickedMob.createSnapshot();
+        if (snapshot == null) {
+            Entity temp = clickedMob.getWorld().spawnEntity(clickedMob.getLocation(), clickedMob.getType());
+            snapshot = temp.createSnapshot();
+            temp.remove();
+        }
+
+        if (snapshot == null) {
+            log.error("Failed to create an EntitySnapshot for entity type: " + clickedMob.getType()
+                    + ". Capture aborted.");
+            return;
+        }
+
+        resultMeta.getPersistentDataContainer().set(Keys.MOB_DATA, PersistentDataType.STRING, snapshot.getAsString());
+        resultMeta.getPersistentDataContainer().set(Keys.MOB_NAME, PersistentDataType.STRING, finalName);
+        resultMeta.getPersistentDataContainer().set(Keys.TYPE, PersistentDataType.STRING, finalType);
+        String spawnReason = clickedMob.getPersistentDataContainer().get(Keys.SPAWN_REASON, PersistentDataType.STRING);
+        if (spawnReason == null || spawnReason.isEmpty()) {
+            spawnReason = clickedMob.getEntitySpawnReason().name();
+        }
+
+        resultMeta.getPersistentDataContainer().set(Keys.SPAWN_REASON, PersistentDataType.STRING, spawnReason);
+        resultMeta
+                .getPersistentDataContainer()
+                .set(Keys.ID, PersistentDataType.STRING, UUID.randomUUID().toString());
+
+        String nameFormat = consumable ? oneUse.displayName : multiUse.displayName;
+        List<String> rawLore = consumable ? oneUse.filledLore : multiUse.filledLore;
 
         ItemHandler.applyText(
-                captureMeta,
-                displayName,
-                filledLore.stream()
-                        .map(line -> line.replace("<entity_name>", safeEntityName)
-                                .replace("<entity_type>", target.getType().toString()))
+                resultMeta,
+                nameFormat,
+                rawLore.stream()
+                        .map(line -> line.replace("<entity_name>", finalName).replace("<entity_type>", finalType))
                         .toList());
 
-        captureItem.setItemMeta(captureMeta);
+        resultItem.setItemMeta(resultMeta);
 
         VesselCaptureEvent captureEvent =
-                new VesselCaptureEvent(player, snapshot, captureLocation, tier, safeEntityName, captureItem);
+                new VesselCaptureEvent(player, snapshot, loc, vesselType, finalName, resultItem);
         plugin.getServer().getPluginManager().callEvent(captureEvent);
 
         if (captureEvent.isCancelled()) return;
 
-        handItem.subtract();
+        itemInHand.subtract();
 
         player.getInventory()
-                .addItem(captureItem)
+                .addItem(resultItem)
                 .values()
                 .forEach(leftover -> player.getWorld().dropItemNaturally(player.getLocation(), leftover));
 
-        target.remove();
+        clickedMob.remove();
         plugin.getCooldownHandler().setCooldown(player.getUniqueId());
     }
 

@@ -17,9 +17,9 @@ import org.maboroshi.vessel.listener.ReleaseListener;
 import org.maboroshi.vessel.listener.SpawnReasonListener;
 import org.maboroshi.vessel.manager.VesselManager;
 import org.maboroshi.vessel.protection.ProtectionService;
+import org.maboroshi.vessel.util.Keys;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
-import org.maboroshi.vessel.util.NamespacedKeys;
 import org.maboroshi.vessel.util.UpdateChecker;
 
 public final class Vessel extends JavaPlugin {
@@ -37,7 +37,7 @@ public final class Vessel extends JavaPlugin {
     @Override
     public void onEnable() {
         plugin = this;
-        NamespacedKeys.load(this);
+        Keys.init(this);
         this.configManager = new ConfigManager(this, getDataFolder());
 
         try {

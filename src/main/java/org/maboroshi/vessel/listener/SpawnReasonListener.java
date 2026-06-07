@@ -4,7 +4,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.maboroshi.vessel.Vessel;
-import org.maboroshi.vessel.util.NamespacedKeys;
+import org.maboroshi.vessel.util.Keys;
 
 public class SpawnReasonListener implements Listener {
     public SpawnReasonListener(Vessel plugin) {}
@@ -14,7 +14,7 @@ public class SpawnReasonListener implements Listener {
         event.getEntity()
                 .getPersistentDataContainer()
                 .set(
-                        NamespacedKeys.SPAWN_REASON,
+                        Keys.SPAWN_REASON,
                         org.bukkit.persistence.PersistentDataType.STRING,
                         event.getSpawnReason().name());
     }
