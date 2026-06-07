@@ -3,6 +3,7 @@ package org.maboroshi.vessel;
 import dev.rollczi.litecommands.LiteCommands;
 import dev.rollczi.litecommands.argument.ArgumentKey;
 import dev.rollczi.litecommands.bukkit.LiteBukkitFactory;
+import dev.rollczi.litecommands.folia.FoliaExtension;
 import dev.rollczi.litecommands.suggestion.SuggestionResult;
 import java.util.stream.IntStream;
 import org.bstats.bukkit.Metrics;
@@ -73,6 +74,7 @@ public final class Vessel extends JavaPlugin {
                         SuggestionResult.of(IntStream.rangeClosed(1, 64)
                                 .mapToObj(String::valueOf)
                                 .toList()))
+                .extension(new FoliaExtension(this))
                 .build();
 
         @SuppressWarnings("unused")

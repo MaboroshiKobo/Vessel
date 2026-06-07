@@ -20,6 +20,7 @@ public class Loader implements PluginLoader {
 
         resolver.addDependency(new Dependency(new DefaultArtifact("de.exlll:configlib-paper:4.8.1"), null));
         resolver.addDependency(new Dependency(new DefaultArtifact("dev.rollczi:litecommands-bukkit:3.10.9"), null));
+        resolver.addDependency(new Dependency(new DefaultArtifact("dev.rollczi:litecommands-folia:3.10.9"), null));
 
         classpathBuilder.addLibrary(resolver);
     }

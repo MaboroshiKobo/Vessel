@@ -34,17 +34,20 @@ repositories {
     maven { url = 'https://repo.nexomc.com/releases' }
     maven { url = 'https://maven.enginehub.org/repo/' }
     maven { url = 'https://repo.glaremasters.me/repository/towny/' }
+    maven { url = 'https://mvn.lumine.io/repository/maven-public/' }
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
     compileOnly("de.exlll:configlib-paper:4.8.1")
     compileOnly("dev.rollczi:litecommands-bukkit:3.10.9")
+    compileOnly("dev.rollczi:litecommands-folia:3.10.9")
     implementation("org.bstats:bstats-bukkit:3.2.1")
     compileOnly("me.clip:placeholderapi:2.12.2")
     compileOnly("com.nexomc:nexo:1.23")
     compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.0.17")
     compileOnly("com.palmergames.bukkit.towny:towny:0.103.0.2")
+    compileOnly("io.lumine:Mythic-Dist:5.12.1")
 }
 
 tasks.register("printVersion") {
