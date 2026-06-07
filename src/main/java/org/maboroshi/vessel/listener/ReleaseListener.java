@@ -2,24 +2,15 @@ package org.maboroshi.vessel.listener;
 
 import io.lumine.mythic.bukkit.MythicBukkit;
 import java.util.Locale;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Ambient;
-import org.bukkit.entity.Animals;
-import org.bukkit.entity.Boss;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntitySnapshot;
-import org.bukkit.entity.Fish;
-import org.bukkit.entity.Golem;
-import org.bukkit.entity.Illager;
-import org.bukkit.entity.Monster;
-import org.bukkit.entity.NPC;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Raider;
-import org.bukkit.entity.Tameable;
-import org.bukkit.entity.WaterMob;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -35,12 +26,12 @@ import org.maboroshi.vessel.config.ConfigManager;
 import org.maboroshi.vessel.config.settings.modules.ConsumableConfiguration;
 import org.maboroshi.vessel.config.settings.modules.ReusableConfiguration;
 import org.maboroshi.vessel.config.settings.shared.FilterConfiguration;
-import org.maboroshi.vessel.config.settings.shared.FilterMode;
 import org.maboroshi.vessel.handler.CooldownHandler;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Keys;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
+import org.maboroshi.vessel.util.VesselUtils;
 
 public class ReleaseListener implements Listener {
     private final Vessel plugin;
@@ -70,9 +61,9 @@ public class ReleaseListener implements Listener {
         if (!itemInHand.hasItemMeta()) return;
 
         ItemMeta meta = itemInHand.getItemMeta();
-        if (!meta.getPersistentDataContainer().has(Keys.TYPE, PersistentDataType.STRING)) return;
+        if (!meta.getPersistentDataContainer().has(Keys.VESSEL_TYPE, PersistentDataType.STRING)) return;
 
-        String vesselType = meta.getPersistentDataContainer().get(Keys.TYPE, PersistentDataType.STRING);
+        String vesselType = meta.getPersistentDataContainer().get(Keys.VESSEL_TYPE, PersistentDataType.STRING);
         if (!"consumable".equals(vesselType) && !"reusable".equals(vesselType)) return;
 
         if (!player.hasPermission("vessel.use." + vesselType)) {
@@ -89,7 +80,7 @@ public class ReleaseListener implements Listener {
         ReusableConfiguration multiUse = config.getReusableConfig();
         FilterConfiguration worlds = "consumable".equals(vesselType) ? oneUse.worlds : multiUse.worlds;
 
-        if (!isAllowed(player.getWorld().getName(), worlds)) {
+        if (!VesselUtils.isAllowed(player.getWorld().getName(), worlds)) {
             messageUtils.send(
                     player,
                     config.getMessageConfig().general.cannotReleaseWorld,
@@ -119,7 +110,7 @@ public class ReleaseListener implements Listener {
 
         if (!player.hasPermission("vessel.release.*")
                 && !player.hasPermission("vessel.release." + mobId)
-                && !hasGroupPermission(player, tempMob)) {
+                && !VesselUtils.hasGroupPermission(player, tempMob, "release")) {
             messageUtils.send(
                     player, config.getMessageConfig().general.cannotRelease, messageUtils.tag("entity_type", mobId));
             return;
@@ -128,8 +119,14 @@ public class ReleaseListener implements Listener {
         String savedName = meta.getPersistentDataContainer().get(Keys.MOB_NAME, PersistentDataType.STRING);
         String savedReason = meta.getPersistentDataContainer().get(Keys.SPAWN_REASON, PersistentDataType.STRING);
 
+        String safeSavedName = null;
+        if (savedName != null) {
+            safeSavedName = MiniMessage.miniMessage()
+                    .serialize(LegacyComponentSerializer.legacySection().deserialize(savedName));
+        }
+
         VesselReleaseEvent releaseEvent = new VesselReleaseEvent(
-                player, snapshot, loc, vesselType, savedName != null ? savedName : mobId, itemInHand);
+                player, snapshot, loc, vesselType, safeSavedName != null ? safeSavedName : mobId, itemInHand);
         plugin.getServer().getPluginManager().callEvent(releaseEvent);
 
         if (releaseEvent.isCancelled()) return;
@@ -159,7 +156,11 @@ public class ReleaseListener implements Listener {
             releasedMob = spawnVanillaSnapshot(snapshot, loc, savedReason);
         }
 
-        if (releasedMob == null) return;
+        if (releasedMob == null) {
+            log.error(
+                    "Failed to spawn entity from snapshot during release. The spawn was likely vetoed by another plugin or blocked by Paper's internal entity integrity checks.");
+            return;
+        }
 
         releasedMob.getPersistentDataContainer().set(Keys.FROM_VESSEL, PersistentDataType.BOOLEAN, true);
 
@@ -173,7 +174,7 @@ public class ReleaseListener implements Listener {
             cleanedMeta.getPersistentDataContainer().remove(Keys.MOB_DATA);
             cleanedMeta.getPersistentDataContainer().remove(Keys.MOB_NAME);
             cleanedMeta.getPersistentDataContainer().remove(Keys.SPAWN_REASON);
-            cleanedMeta.getPersistentDataContainer().remove(Keys.ID);
+            cleanedMeta.getPersistentDataContainer().remove(Keys.VESSEL_ID);
             cleanedMeta.getPersistentDataContainer().remove(Keys.MYTHIC_ID);
             ItemHandler.applyText(cleanedMeta, config.getReusableConfig().displayName, config.getReusableConfig().lore);
             cleanedVessel.setItemMeta(cleanedMeta);
@@ -201,21 +202,6 @@ public class ReleaseListener implements Listener {
         return null;
     }
 
-    private boolean hasGroupPermission(Player player, Entity target) {
-        if (target instanceof Animals && player.hasPermission("vessel.release.animals")) return true;
-        if (target instanceof Monster && player.hasPermission("vessel.release.monsters")) return true;
-        if (target instanceof Golem && player.hasPermission("vessel.release.golems")) return true;
-        if (target instanceof Fish && player.hasPermission("vessel.release.fish")) return true;
-        if (target instanceof WaterMob && player.hasPermission("vessel.release.watermobs")) return true;
-        if (target instanceof Ambient && player.hasPermission("vessel.release.ambient")) return true;
-        if (target instanceof Raider && player.hasPermission("vessel.release.raiders")) return true;
-        if (target instanceof Boss && player.hasPermission("vessel.release.bosses")) return true;
-        if (target instanceof Illager && player.hasPermission("vessel.release.illagers")) return true;
-        if (target instanceof Tameable && player.hasPermission("vessel.release.tameable")) return true;
-        if (target instanceof NPC && player.hasPermission("vessel.release.npcs")) return true;
-        return false;
-    }
-
     private CreatureSpawnEvent.SpawnReason resolveSpawnReason(String savedReason) {
         if (savedReason == null || savedReason.isEmpty()) {
             return CreatureSpawnEvent.SpawnReason.CUSTOM;
@@ -226,12 +212,6 @@ public class ReleaseListener implements Listener {
             log.debug("Unknown stored spawn reason '" + savedReason + "', falling back to CUSTOM.");
             return CreatureSpawnEvent.SpawnReason.CUSTOM;
         }
-    }
-
-    private boolean isAllowed(String value, FilterConfiguration filter) {
-        if (filter.mode == FilterMode.NONE) return true;
-        boolean listed = filter.values.stream().anyMatch(value::equalsIgnoreCase);
-        return filter.mode == FilterMode.WHITELIST ? listed : !listed;
     }
 
     private Location findSafeReleaseLocation(Block block, BlockFace face) {

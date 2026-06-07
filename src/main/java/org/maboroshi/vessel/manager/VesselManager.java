@@ -33,7 +33,7 @@ public class VesselManager {
 
             ItemHandler.applyText(meta, config.getConsumableConfig().displayName, config.getConsumableConfig().lore);
 
-            meta.getPersistentDataContainer().set(Keys.TYPE, PersistentDataType.STRING, "consumable");
+            meta.getPersistentDataContainer().set(Keys.VESSEL_TYPE, PersistentDataType.STRING, "consumable");
             item.setItemMeta(meta);
             return item;
 
@@ -46,7 +46,7 @@ public class VesselManager {
 
             ItemHandler.applyText(meta, config.getReusableConfig().displayName, config.getReusableConfig().lore);
 
-            meta.getPersistentDataContainer().set(Keys.TYPE, PersistentDataType.STRING, "reusable");
+            meta.getPersistentDataContainer().set(Keys.VESSEL_TYPE, PersistentDataType.STRING, "reusable");
             item.setItemMeta(meta);
             return item;
         }

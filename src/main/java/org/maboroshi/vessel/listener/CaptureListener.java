@@ -4,23 +4,17 @@ import io.lumine.mythic.bukkit.MythicBukkit;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.entity.Ambient;
-import org.bukkit.entity.Animals;
-import org.bukkit.entity.Boss;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntitySnapshot;
-import org.bukkit.entity.Fish;
-import org.bukkit.entity.Golem;
-import org.bukkit.entity.Illager;
 import org.bukkit.entity.Mob;
-import org.bukkit.entity.Monster;
-import org.bukkit.entity.NPC;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Raider;
 import org.bukkit.entity.Tameable;
-import org.bukkit.entity.WaterMob;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -35,11 +29,11 @@ import org.maboroshi.vessel.config.settings.modules.ConsumableConfiguration;
 import org.maboroshi.vessel.config.settings.modules.ReusableConfiguration;
 import org.maboroshi.vessel.config.settings.shared.ExclusionConfiguration;
 import org.maboroshi.vessel.config.settings.shared.FilterConfiguration;
-import org.maboroshi.vessel.config.settings.shared.FilterMode;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Keys;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
+import org.maboroshi.vessel.util.VesselUtils;
 
 public class CaptureListener implements Listener {
     private final Vessel plugin;
@@ -64,7 +58,7 @@ public class CaptureListener implements Listener {
         if (!itemInHand.hasItemMeta()) return;
 
         ItemMeta meta = itemInHand.getItemMeta();
-        if (!meta.getPersistentDataContainer().has(Keys.TYPE, PersistentDataType.STRING)
+        if (!meta.getPersistentDataContainer().has(Keys.VESSEL_TYPE, PersistentDataType.STRING)
                 || meta.getPersistentDataContainer().has(Keys.MOB_DATA, PersistentDataType.STRING)) {
             return;
         }
@@ -74,7 +68,7 @@ public class CaptureListener implements Listener {
             return;
         }
 
-        String vesselType = meta.getPersistentDataContainer().get(Keys.TYPE, PersistentDataType.STRING);
+        String vesselType = meta.getPersistentDataContainer().get(Keys.VESSEL_TYPE, PersistentDataType.STRING);
         boolean consumable = "consumable".equals(vesselType);
         boolean reusable = "reusable".equals(vesselType);
 
@@ -94,7 +88,7 @@ public class CaptureListener implements Listener {
         ReusableConfiguration multiUse = config.getReusableConfig();
 
         FilterConfiguration worlds = consumable ? oneUse.worlds : multiUse.worlds;
-        if (!isAllowed(player.getWorld().getName(), worlds)) {
+        if (!VesselUtils.isAllowed(player.getWorld().getName(), worlds)) {
             messageUtils.send(
                     player,
                     config.getMessageConfig().general.cannotCaptureWorld,
@@ -112,16 +106,19 @@ public class CaptureListener implements Listener {
         String mobId = clickedMob.getType().name().toLowerCase(Locale.ROOT);
         ExclusionConfiguration rules = consumable ? oneUse.exclusions : multiUse.exclusions;
 
+        String rawMobName = clickedMob.getName() != null ? clickedMob.getName() : mobId;
+        String safeMobName = MiniMessage.miniMessage()
+                .serialize(LegacyComponentSerializer.legacySection().deserialize(rawMobName));
+
         if (clickedMob.getPersistentDataContainer().has(Keys.SPAWN_REASON, PersistentDataType.STRING)) {
             String reason = clickedMob.getPersistentDataContainer().get(Keys.SPAWN_REASON, PersistentDataType.STRING);
-            if (!isAllowed(reason, rules.spawnReasons)) {
+            if (!VesselUtils.isAllowed(reason, rules.spawnReasons)) {
                 messageUtils.send(
                         player,
                         config.getMessageConfig().general.blacklistedEntity,
                         messageUtils.tag("entity_type", mobId),
                         messageUtils.tag("spawn_reason", reason),
-                        messageUtils.tagParsed(
-                                "entity_name", clickedMob.getName() != null ? clickedMob.getName() : mobId));
+                        messageUtils.tagParsed("entity_name", safeMobName));
                 log.debug("Player " + player.getName() + " tried to capture entity spawned by reason " + reason + ".");
                 return;
             }
@@ -154,19 +151,19 @@ public class CaptureListener implements Listener {
 
         FilterConfiguration mobs = consumable ? oneUse.entities : multiUse.entities;
 
-        if (!isAllowed(mobId, mobs)) {
+        if (!VesselUtils.isAllowed(mobId, mobs)) {
             log.debug("Player " + player.getName() + " tried to capture a disallowed entity.");
             messageUtils.send(
                     player,
                     config.getMessageConfig().general.blacklistedEntity,
                     messageUtils.tag("entity_type", mobId),
-                    messageUtils.tagParsed("entity_name", clickedMob.getName() != null ? clickedMob.getName() : mobId));
+                    messageUtils.tagParsed("entity_name", safeMobName));
             return;
         }
 
         if (!player.hasPermission("vessel.capture.*")
                 && !player.hasPermission("vessel.capture." + mobId)
-                && !hasGroupPermission(player, clickedMob)) {
+                && !VesselUtils.hasGroupPermission(player, clickedMob, "capture")) {
             messageUtils.send(
                     player, config.getMessageConfig().general.cannotCapture, messageUtils.tag("entity_type", mobId));
             return;
@@ -200,6 +197,17 @@ public class CaptureListener implements Listener {
 
         final String finalName = targetName;
         final String finalType = targetType;
+        final String miniMessageName = MiniMessage.miniMessage()
+                .serialize(LegacyComponentSerializer.legacySection().deserialize(finalName));
+
+        Component customNameComponent = clickedMob.customName();
+        if (customNameComponent != null) {
+            String legacyRepresentation =
+                    LegacyComponentSerializer.legacySection().serialize(customNameComponent);
+            Component cleanedComponent =
+                    LegacyComponentSerializer.legacySection().deserialize(legacyRepresentation);
+            clickedMob.customName(cleanedComponent);
+        }
 
         EntitySnapshot snapshot = clickedMob.createSnapshot();
         if (snapshot == null) {
@@ -216,7 +224,7 @@ public class CaptureListener implements Listener {
 
         resultMeta.getPersistentDataContainer().set(Keys.MOB_DATA, PersistentDataType.STRING, snapshot.getAsString());
         resultMeta.getPersistentDataContainer().set(Keys.MOB_NAME, PersistentDataType.STRING, finalName);
-        resultMeta.getPersistentDataContainer().set(Keys.TYPE, PersistentDataType.STRING, finalType);
+        resultMeta.getPersistentDataContainer().set(Keys.VESSEL_TYPE, PersistentDataType.STRING, vesselType);
         String spawnReason = clickedMob.getPersistentDataContainer().get(Keys.SPAWN_REASON, PersistentDataType.STRING);
         if (spawnReason == null || spawnReason.isEmpty()) {
             spawnReason = clickedMob.getEntitySpawnReason().name();
@@ -225,7 +233,10 @@ public class CaptureListener implements Listener {
         resultMeta.getPersistentDataContainer().set(Keys.SPAWN_REASON, PersistentDataType.STRING, spawnReason);
         resultMeta
                 .getPersistentDataContainer()
-                .set(Keys.ID, PersistentDataType.STRING, UUID.randomUUID().toString());
+                .set(
+                        Keys.VESSEL_ID,
+                        PersistentDataType.STRING,
+                        UUID.randomUUID().toString());
 
         String nameFormat = consumable ? oneUse.displayName : multiUse.displayName;
         List<String> rawLore = consumable ? oneUse.filledLore : multiUse.filledLore;
@@ -234,7 +245,8 @@ public class CaptureListener implements Listener {
                 resultMeta,
                 nameFormat,
                 rawLore.stream()
-                        .map(line -> line.replace("<entity_name>", finalName).replace("<entity_type>", finalType))
+                        .map(line ->
+                                line.replace("<entity_name>", miniMessageName).replace("<entity_type>", finalType))
                         .toList());
 
         resultItem.setItemMeta(resultMeta);
@@ -254,27 +266,5 @@ public class CaptureListener implements Listener {
 
         clickedMob.remove();
         plugin.getCooldownHandler().setCooldown(player.getUniqueId());
-    }
-
-    private boolean hasGroupPermission(Player player, Entity target) {
-        if (target instanceof Animals && player.hasPermission("vessel.capture.animals")) return true;
-        if (target instanceof Monster && player.hasPermission("vessel.capture.monsters")) return true;
-        if (target instanceof Golem && player.hasPermission("vessel.capture.golems")) return true;
-        if (target instanceof Fish && player.hasPermission("vessel.capture.fish")) return true;
-        if (target instanceof WaterMob && player.hasPermission("vessel.capture.watermobs")) return true;
-        if (target instanceof Ambient && player.hasPermission("vessel.capture.ambient")) return true;
-        if (target instanceof Raider && player.hasPermission("vessel.capture.raiders")) return true;
-        if (target instanceof Boss && player.hasPermission("vessel.capture.bosses")) return true;
-        if (target instanceof Illager && player.hasPermission("vessel.capture.illagers")) return true;
-        if (target instanceof Tameable && player.hasPermission("vessel.capture.tameable")) return true;
-        if (target instanceof NPC && player.hasPermission("vessel.capture.npcs")) return true;
-        return false;
-    }
-
-    private boolean isAllowed(String value, FilterConfiguration filter) {
-        if (filter.mode == FilterMode.NONE) return true;
-
-        boolean listed = filter.values.stream().anyMatch(value::equalsIgnoreCase);
-        return filter.mode == FilterMode.WHITELIST ? listed : !listed;
     }
 }
