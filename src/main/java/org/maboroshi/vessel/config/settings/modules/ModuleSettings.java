@@ -6,7 +6,7 @@ import java.util.List;
 
 @Configuration
 public class ModuleSettings {
-    public static final List<String> DEFAULT_ENTITY_BLACKLIST = List.of("ENDER_DRAGON", "WITHER", "WARDEN", "PLAYER");
+    public static final List<String> DEFAULT_ENTITY_BLACKLIST = List.of("ENDER_DRAGON", "WITHER", "WARDEN");
 
     @Comment("Toggle the consumable vessel module.")
     public ConsumableConfiguration consumable = new ConsumableConfiguration();
