@@ -144,6 +144,8 @@ public class ReleaseListener implements Listener {
 
         if (releaseEvent.isCancelled()) return;
 
+        pendingEntity.getPersistentDataContainer().set(NamespacedKeys.IS_VESSEL_ENTITY, PersistentDataType.BOOLEAN, true);
+
         CreatureSpawnEvent.SpawnReason spawnReason = resolveSpawnReason(storedSpawnReason);
         if (!pendingEntity.spawnAt(releaseLocation, spawnReason)) return;
 
