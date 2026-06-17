@@ -10,8 +10,8 @@ import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.api.event.VesselCaptureEvent;
 import org.maboroshi.vessel.api.event.VesselReleaseEvent;
 import org.maboroshi.vessel.config.ConfigManager;
-import org.maboroshi.vessel.config.settings.shared.ModuleEvents;
-import org.maboroshi.vessel.config.settings.shared.VesselEvent;
+import org.maboroshi.vessel.config.settings.components.ModuleEvents;
+import org.maboroshi.vessel.config.settings.components.ModuleEvents.EventSettings;
 
 public class VesselEventHandler implements Listener {
     private final ConfigManager config;
@@ -61,7 +61,7 @@ public class VesselEventHandler implements Listener {
     }
 
     private void runModuleEvent(
-            VesselEvent event,
+            EventSettings event,
             Location location,
             OfflinePlayer player,
             String entityName,

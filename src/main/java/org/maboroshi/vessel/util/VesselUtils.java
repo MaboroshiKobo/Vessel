@@ -13,8 +13,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Raider;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.WaterMob;
-import org.maboroshi.vessel.config.settings.shared.FilterConfiguration;
-import org.maboroshi.vessel.config.settings.shared.FilterMode;
+import org.maboroshi.vessel.config.settings.components.FilterSettings;
+import org.maboroshi.vessel.config.settings.components.FilterSettings.FilterMode;
 
 public class VesselUtils {
     public static boolean hasGroupPermission(Player player, Entity target, String action) {
@@ -33,7 +33,7 @@ public class VesselUtils {
         return false;
     }
 
-    public static boolean isAllowed(String value, FilterConfiguration filter) {
+    public static boolean isAllowed(String value, FilterSettings filter) {
         if (filter.mode == FilterMode.NONE) return true;
 
         boolean listed = filter.values.stream().anyMatch(value::equalsIgnoreCase);

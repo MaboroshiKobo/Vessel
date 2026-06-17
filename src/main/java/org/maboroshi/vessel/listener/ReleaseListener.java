@@ -23,9 +23,9 @@ import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.api.event.VesselReleaseEvent;
 import org.maboroshi.vessel.config.ConfigManager;
-import org.maboroshi.vessel.config.settings.modules.ConsumableConfiguration;
-import org.maboroshi.vessel.config.settings.modules.ReusableConfiguration;
-import org.maboroshi.vessel.config.settings.shared.FilterConfiguration;
+import org.maboroshi.vessel.config.settings.ConsumableConfiguration;
+import org.maboroshi.vessel.config.settings.ReusableConfiguration;
+import org.maboroshi.vessel.config.settings.components.FilterSettings;
 import org.maboroshi.vessel.handler.CooldownHandler;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Keys;
@@ -78,7 +78,7 @@ public class ReleaseListener implements Listener {
 
         ConsumableConfiguration oneUse = config.getConsumableConfig();
         ReusableConfiguration multiUse = config.getReusableConfig();
-        FilterConfiguration worlds = "consumable".equals(vesselType) ? oneUse.worlds : multiUse.worlds;
+        FilterSettings worlds = "consumable".equals(vesselType) ? oneUse.restrictions.worlds : multiUse.restrictions.worlds;
 
         if (!VesselUtils.isAllowed(player.getWorld().getName(), worlds)) {
             messageUtils.send(
@@ -176,7 +176,7 @@ public class ReleaseListener implements Listener {
             cleanedMeta.getPersistentDataContainer().remove(Keys.SPAWN_REASON);
             cleanedMeta.getPersistentDataContainer().remove(Keys.VESSEL_ID);
             cleanedMeta.getPersistentDataContainer().remove(Keys.MYTHIC_ID);
-            ItemHandler.applyText(cleanedMeta, config.getReusableConfig().displayName, config.getReusableConfig().lore);
+            ItemHandler.applyText(cleanedMeta, config.getReusableConfig().item.displayName, config.getReusableConfig().item.lore);
             cleanedVessel.setItemMeta(cleanedMeta);
 
             if (itemInHand.getAmount() > 1) {

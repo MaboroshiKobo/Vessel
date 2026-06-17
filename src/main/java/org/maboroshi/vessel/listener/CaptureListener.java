@@ -4,7 +4,6 @@ import io.lumine.mythic.bukkit.MythicBukkit;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -25,10 +24,10 @@ import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.api.event.VesselCaptureEvent;
 import org.maboroshi.vessel.config.ConfigManager;
-import org.maboroshi.vessel.config.settings.modules.ConsumableConfiguration;
-import org.maboroshi.vessel.config.settings.modules.ReusableConfiguration;
-import org.maboroshi.vessel.config.settings.shared.ExclusionConfiguration;
-import org.maboroshi.vessel.config.settings.shared.FilterConfiguration;
+import org.maboroshi.vessel.config.settings.ConsumableConfiguration;
+import org.maboroshi.vessel.config.settings.ReusableConfiguration;
+import org.maboroshi.vessel.config.settings.components.ExclusionSettings;
+import org.maboroshi.vessel.config.settings.components.FilterSettings;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Keys;
 import org.maboroshi.vessel.util.Logger;
@@ -87,7 +86,7 @@ public class CaptureListener implements Listener {
         ConsumableConfiguration oneUse = config.getConsumableConfig();
         ReusableConfiguration multiUse = config.getReusableConfig();
 
-        FilterConfiguration worlds = consumable ? oneUse.worlds : multiUse.worlds;
+        FilterSettings worlds = consumable ? oneUse.restrictions.worlds : multiUse.restrictions.worlds;
         if (!VesselUtils.isAllowed(player.getWorld().getName(), worlds)) {
             messageUtils.send(
                     player,
@@ -104,7 +103,7 @@ public class CaptureListener implements Listener {
         }
 
         String mobId = clickedMob.getType().name().toLowerCase(Locale.ROOT);
-        ExclusionConfiguration rules = consumable ? oneUse.exclusions : multiUse.exclusions;
+        ExclusionSettings rules = consumable ? oneUse.restrictions.exclusions : multiUse.restrictions.exclusions;
 
         String rawMobName = clickedMob.getName() != null ? clickedMob.getName() : mobId;
         String safeMobName = MiniMessage.miniMessage()
@@ -149,7 +148,7 @@ public class CaptureListener implements Listener {
             return;
         }
 
-        FilterConfiguration mobs = consumable ? oneUse.entities : multiUse.entities;
+        FilterSettings mobs = consumable ? oneUse.restrictions.entities : multiUse.restrictions.entities;
 
         if (!VesselUtils.isAllowed(mobId, mobs)) {
             log.debug("Player " + player.getName() + " tried to capture a disallowed entity.");
@@ -238,8 +237,8 @@ public class CaptureListener implements Listener {
                         PersistentDataType.STRING,
                         UUID.randomUUID().toString());
 
-        String nameFormat = consumable ? oneUse.displayName : multiUse.displayName;
-        List<String> rawLore = consumable ? oneUse.filledLore : multiUse.filledLore;
+        String nameFormat = consumable ? oneUse.item.displayName : multiUse.item.displayName;
+        List<String> rawLore = consumable ? oneUse.item.filledLore : multiUse.item.filledLore;
 
         ItemHandler.applyText(
                 resultMeta,

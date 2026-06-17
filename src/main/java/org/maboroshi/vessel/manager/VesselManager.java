@@ -27,11 +27,11 @@ public class VesselManager {
         if ("consumable".equalsIgnoreCase(type)) {
             if (!config.getConsumableConfig().enabled) return null;
 
-            ItemStack item = resolveConfiguredItem(config.getConsumableConfig().item, Material.AMETHYST_SHARD);
+            ItemStack item = resolveConfiguredItem(config.getConsumableConfig().item.material, Material.AMETHYST_SHARD);
             ItemMeta meta = item.getItemMeta();
             if (meta == null) return null;
 
-            ItemHandler.applyText(meta, config.getConsumableConfig().displayName, config.getConsumableConfig().lore);
+            ItemHandler.applyText(meta, config.getConsumableConfig().item.displayName, config.getConsumableConfig().item.lore);
 
             meta.getPersistentDataContainer().set(Keys.VESSEL_TYPE, PersistentDataType.STRING, "consumable");
             item.setItemMeta(meta);
@@ -40,11 +40,11 @@ public class VesselManager {
         } else if ("reusable".equalsIgnoreCase(type)) {
             if (!config.getReusableConfig().enabled) return null;
 
-            ItemStack item = resolveConfiguredItem(config.getReusableConfig().item, Material.ECHO_SHARD);
+            ItemStack item = resolveConfiguredItem(config.getReusableConfig().item.material, Material.ECHO_SHARD);
             ItemMeta meta = item.getItemMeta();
             if (meta == null) return null;
 
-            ItemHandler.applyText(meta, config.getReusableConfig().displayName, config.getReusableConfig().lore);
+            ItemHandler.applyText(meta, config.getReusableConfig().item.displayName, config.getReusableConfig().item.lore);
 
             meta.getPersistentDataContainer().set(Keys.VESSEL_TYPE, PersistentDataType.STRING, "reusable");
             item.setItemMeta(meta);
