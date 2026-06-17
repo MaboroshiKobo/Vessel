@@ -3,7 +3,6 @@ package org.maboroshi.vessel.config.settings.components;
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
 import java.util.List;
-
 import org.maboroshi.vessel.config.settings.components.FilterSettings.FilterMode;
 
 @Configuration

@@ -9,12 +9,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.maboroshi.vessel.Vessel;
+import org.maboroshi.vessel.config.settings.ConsumableConfiguration;
 import org.maboroshi.vessel.config.settings.MainConfig;
 import org.maboroshi.vessel.config.settings.MainConfig.MainConfiguration;
 import org.maboroshi.vessel.config.settings.MessageConfig;
 import org.maboroshi.vessel.config.settings.MessageConfig.MessageConfiguration;
-import org.maboroshi.vessel.config.settings.modules.ConsumableConfiguration;
-import org.maboroshi.vessel.config.settings.modules.ReusableConfiguration;
+import org.maboroshi.vessel.config.settings.ReusableConfiguration;
 
 public class ConfigManager {
     private final File dataFolder;

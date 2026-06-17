@@ -4,7 +4,6 @@ import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
 import java.util.List;
 import java.util.Map;
-
 import org.maboroshi.vessel.config.settings.components.ItemSettings;
 import org.maboroshi.vessel.config.settings.components.ModuleEvents;
 import org.maboroshi.vessel.config.settings.components.RestrictionSettings;
@@ -23,12 +22,12 @@ public class ConsumableConfiguration {
             "echo_shard",
             "<light_purple>Fragile Vessel</light_purple>",
             List.of("<gray>Right-click a mob to capture it.</gray>", "<red>Breaks upon release.</red>"),
-            List.of("<gray>Right-click to release the captured mob.</gray>", 
+            List.of(
+                    "<gray>Right-click to release the captured mob.</gray>",
                     "<red>Breaks upon release.</red>",
-                    "<reset>", 
+                    "<reset>",
                     "<gray>Contains <white><entity_name></white> of type <white><entity_type></white>.</gray>"),
-            Map.of("COW", "leather")
-    );
+            Map.of("COW", "leather"));
 
     @Comment("Event configuration")
     public ModuleEvents events = new ModuleEvents();

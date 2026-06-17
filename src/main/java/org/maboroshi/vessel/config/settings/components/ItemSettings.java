@@ -28,17 +28,22 @@ public class ItemSettings {
         "Specific material overrides based on the captured entity type.",
         "If an entity is not listed here, it falls back to 'filledMaterial' above."
     })
-    public Map<String, String> entityOverrides = new HashMap<>();
+    public Map<String, String> materialOverrides = new HashMap<>();
 
     public ItemSettings() {}
 
-    public ItemSettings(String material, String filledMaterial, String displayName, 
-                        List<String> lore, List<String> filledLore, Map<String, String> entityOverrides) {
+    public ItemSettings(
+            String material,
+            String filledMaterial,
+            String displayName,
+            List<String> lore,
+            List<String> filledLore,
+            Map<String, String> materialOverrides) {
         this.material = material;
         this.filledMaterial = filledMaterial;
         this.displayName = displayName;
         this.lore = lore;
         this.filledLore = filledLore;
-        this.entityOverrides = entityOverrides;
+        this.materialOverrides = materialOverrides;
     }
 }
