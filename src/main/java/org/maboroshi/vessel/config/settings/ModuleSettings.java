@@ -1,4 +1,4 @@
-package org.maboroshi.vessel.config.settings.modules;
+package org.maboroshi.vessel.config.settings;
 
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;

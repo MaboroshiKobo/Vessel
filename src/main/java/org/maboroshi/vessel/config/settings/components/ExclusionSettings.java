@@ -1,11 +1,13 @@
-package org.maboroshi.vessel.config.settings.shared;
+package org.maboroshi.vessel.config.settings.components;
 
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
 import java.util.List;
 
+import org.maboroshi.vessel.config.settings.components.FilterSettings.FilterMode;
+
 @Configuration
-public class ExclusionConfiguration {
+public class ExclusionSettings {
     @Comment("Should a player be blocked from capturing their own tamed pets?")
     public boolean tamed = false;
 
@@ -16,5 +18,5 @@ public class ExclusionConfiguration {
     public boolean named = false;
 
     @Comment({"Spawn reasons filtered from capture.", "Accepted values: NONE, BLACKLIST, WHITELIST."})
-    public FilterConfiguration spawnReasons = new FilterConfiguration(FilterMode.BLACKLIST, List.of("CUSTOM"));
+    public FilterSettings spawnReasons = new FilterSettings(FilterMode.BLACKLIST, List.of("CUSTOM"));
 }
