@@ -1,9 +1,6 @@
 package org.maboroshi.vessel.listener;
 
-import io.lumine.mythic.bukkit.MythicBukkit;
 import java.util.Locale;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -27,10 +24,10 @@ import org.maboroshi.vessel.config.settings.ConsumableConfiguration;
 import org.maboroshi.vessel.config.settings.ReusableConfiguration;
 import org.maboroshi.vessel.config.settings.components.FilterSettings;
 import org.maboroshi.vessel.handler.CooldownHandler;
-import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Keys;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
+import org.maboroshi.vessel.util.MythicHook;
 import org.maboroshi.vessel.util.VesselUtils;
 
 public class ReleaseListener implements Listener {
@@ -76,9 +73,10 @@ public class ReleaseListener implements Listener {
 
         event.setCancelled(true);
 
-        ConsumableConfiguration oneUse = config.getConsumableConfig();
+        ConsumableConfiguration singleUse = config.getConsumableConfig();
         ReusableConfiguration multiUse = config.getReusableConfig();
-        FilterSettings worlds = "consumable".equals(vesselType) ? oneUse.restrictions.worlds : multiUse.restrictions.worlds;
+        FilterSettings worlds =
+                "consumable".equals(vesselType) ? singleUse.restrictions.worlds : multiUse.restrictions.worlds;
 
         if (!VesselUtils.isAllowed(player.getWorld().getName(), worlds)) {
             messageUtils.send(
@@ -119,14 +117,8 @@ public class ReleaseListener implements Listener {
         String savedName = meta.getPersistentDataContainer().get(Keys.MOB_NAME, PersistentDataType.STRING);
         String savedReason = meta.getPersistentDataContainer().get(Keys.SPAWN_REASON, PersistentDataType.STRING);
 
-        String safeSavedName = null;
-        if (savedName != null) {
-            safeSavedName = MiniMessage.miniMessage()
-                    .serialize(LegacyComponentSerializer.legacySection().deserialize(savedName));
-        }
-
         VesselReleaseEvent releaseEvent = new VesselReleaseEvent(
-                player, snapshot, loc, vesselType, safeSavedName != null ? safeSavedName : mobId, itemInHand);
+                player, snapshot, loc, vesselType, savedName != null ? savedName : mobId, itemInHand);
         plugin.getServer().getPluginManager().callEvent(releaseEvent);
 
         if (releaseEvent.isCancelled()) return;
@@ -137,11 +129,7 @@ public class ReleaseListener implements Listener {
 
         if (mythic && Bukkit.getPluginManager().isPluginEnabled("MythicMobs")) {
             try {
-                releasedMob = MythicBukkit.inst()
-                        .getMobManager()
-                        .spawnMob(mythicId, loc)
-                        .getEntity()
-                        .getBukkitEntity();
+                releasedMob = MythicHook.spawnMob(mythicId, loc);
 
                 if (releasedMob != null && savedReason != null) {
                     releasedMob
@@ -157,8 +145,7 @@ public class ReleaseListener implements Listener {
         }
 
         if (releasedMob == null) {
-            log.error(
-                    "Failed to spawn entity from snapshot during release. The spawn was likely vetoed by another plugin or blocked by Paper's internal entity integrity checks.");
+            log.error("Failed to spawn entity from snapshot during release.");
             return;
         }
 
@@ -167,17 +154,8 @@ public class ReleaseListener implements Listener {
         if ("consumable".equals(vesselType)) {
             itemInHand.subtract();
         } else if ("reusable".equals(vesselType)) {
-            ItemStack cleanedVessel = itemInHand.clone();
-            cleanedVessel.setAmount(1);
-            ItemMeta cleanedMeta = cleanedVessel.getItemMeta();
-
-            cleanedMeta.getPersistentDataContainer().remove(Keys.MOB_DATA);
-            cleanedMeta.getPersistentDataContainer().remove(Keys.MOB_NAME);
-            cleanedMeta.getPersistentDataContainer().remove(Keys.SPAWN_REASON);
-            cleanedMeta.getPersistentDataContainer().remove(Keys.VESSEL_ID);
-            cleanedMeta.getPersistentDataContainer().remove(Keys.MYTHIC_ID);
-            ItemHandler.applyText(cleanedMeta, config.getReusableConfig().item.displayName, config.getReusableConfig().item.lore);
-            cleanedVessel.setItemMeta(cleanedMeta);
+            ItemStack cleanedVessel = plugin.getVesselManager().createEmptyVessel(vesselType);
+            if (cleanedVessel == null) return;
 
             if (itemInHand.getAmount() > 1) {
                 itemInHand.subtract();

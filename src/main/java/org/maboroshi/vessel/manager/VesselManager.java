@@ -2,17 +2,21 @@ package org.maboroshi.vessel.manager;
 
 import com.nexomc.nexo.api.NexoItems;
 import com.nexomc.nexo.items.ItemBuilder;
+import java.util.List;
 import java.util.Locale;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.config.ConfigManager;
+import org.maboroshi.vessel.config.settings.components.ItemSettings;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Keys;
 import org.maboroshi.vessel.util.Logger;
+import org.maboroshi.vessel.util.MythicHook;
 
 public class VesselManager {
     private final ConfigManager config;
@@ -24,34 +28,86 @@ public class VesselManager {
     }
 
     public ItemStack createEmptyVessel(String type) {
-        if ("consumable".equalsIgnoreCase(type)) {
+        String normType = type.toLowerCase(Locale.ROOT);
+        ItemSettings settings;
+        Material fallback;
+
+        if (normType.equals("consumable")) {
             if (!config.getConsumableConfig().enabled) return null;
-
-            ItemStack item = resolveConfiguredItem(config.getConsumableConfig().item.material, Material.AMETHYST_SHARD);
-            ItemMeta meta = item.getItemMeta();
-            if (meta == null) return null;
-
-            ItemHandler.applyText(meta, config.getConsumableConfig().item.displayName, config.getConsumableConfig().item.lore);
-
-            meta.getPersistentDataContainer().set(Keys.VESSEL_TYPE, PersistentDataType.STRING, "consumable");
-            item.setItemMeta(meta);
-            return item;
-
-        } else if ("reusable".equalsIgnoreCase(type)) {
+            settings = config.getConsumableConfig().item;
+            fallback = Material.AMETHYST_SHARD;
+        } else if (normType.equals("reusable")) {
             if (!config.getReusableConfig().enabled) return null;
-
-            ItemStack item = resolveConfiguredItem(config.getReusableConfig().item.material, Material.ECHO_SHARD);
-            ItemMeta meta = item.getItemMeta();
-            if (meta == null) return null;
-
-            ItemHandler.applyText(meta, config.getReusableConfig().item.displayName, config.getReusableConfig().item.lore);
-
-            meta.getPersistentDataContainer().set(Keys.VESSEL_TYPE, PersistentDataType.STRING, "reusable");
-            item.setItemMeta(meta);
-            return item;
+            settings = config.getReusableConfig().item;
+            fallback = Material.ECHO_SHARD;
+        } else {
+            return null;
         }
 
-        return null;
+        ItemStack item = resolveConfiguredItem(settings.material, fallback);
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return null;
+
+        ItemHandler.applyText(meta, settings.displayName, settings.lore);
+        meta.getPersistentDataContainer().set(Keys.VESSEL_TYPE, PersistentDataType.STRING, normType);
+
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public ItemStack createFilledVessel(String type, Entity capturedEntity, String entityCustomName) {
+        String normType = type.toLowerCase(Locale.ROOT);
+        ItemSettings settings;
+        Material fallback;
+
+        if (normType.equals("consumable")) {
+            settings = config.getConsumableConfig().item;
+            fallback = Material.AMETHYST_SHARD;
+        } else if (normType.equals("reusable")) {
+            settings = config.getReusableConfig().item;
+            fallback = Material.ECHO_SHARD;
+        } else {
+            return null;
+        }
+
+        String targetMaterialKey = resolveFilledMaterialKey(settings, capturedEntity);
+        ItemStack item = resolveConfiguredItem(targetMaterialKey, fallback);
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return null;
+
+        meta.getPersistentDataContainer().set(Keys.VESSEL_TYPE, PersistentDataType.STRING, normType);
+
+        String rawTypeName =
+                capturedEntity.getType().name().toLowerCase(Locale.ROOT).replace("_", " ");
+        String safeName = (entityCustomName != null && !entityCustomName.isBlank()) ? entityCustomName : rawTypeName;
+
+        String finalDisplayName =
+                settings.displayName.replace("<entity_name>", safeName).replace("<entity_type>", rawTypeName);
+
+        List<String> finalLore = settings.filledLore.stream()
+                .map(line -> line.replace("<entity_name>", safeName).replace("<entity_type>", rawTypeName))
+                .toList();
+
+        ItemHandler.applyText(meta, finalDisplayName, finalLore);
+
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private String resolveFilledMaterialKey(ItemSettings settings, Entity entity) {
+        if (Bukkit.getPluginManager().isPluginEnabled("MythicMobs")) {
+            String mythicId = MythicHook.getInternalName(entity);
+            if (mythicId != null && settings.materialOverrides.containsKey(mythicId)) {
+                return settings.materialOverrides.get(mythicId);
+            }
+        }
+
+        String vanillaType = entity.getType().name();
+        if (settings.materialOverrides.containsKey(vanillaType)) {
+            return settings.materialOverrides.get(vanillaType);
+        }
+
+        return settings.filledMaterial;
     }
 
     private ItemStack resolveConfiguredItem(String configuredItem, Material fallback) {
