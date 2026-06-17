@@ -27,7 +27,7 @@ public class ReusableConfiguration {
                     "<green>Can be reused multiple times.</green>",
                     "<reset>",
                     "<gray>Contains <white><entity_name></white> of type <white><entity_type></white>.</gray>"),
-            Map.of("COW", "leather"));
+            Map.of("COW", "cow_spawn_egg"));
 
     @Comment("Event configuration")
     public ModuleEvents events = new ModuleEvents();
