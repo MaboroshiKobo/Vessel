@@ -159,7 +159,8 @@ public class CaptureListener implements Listener {
         if (!player.hasPermission("vessel.capture.*")
                 && !player.hasPermission("vessel.capture." + mobId)
                 && !VesselUtils.hasGroupPermission(player, clickedMob, "capture")) {
-            messageUtils.send(player, config.getMessageConfig().general.cannotCapture, messageUtils.tag("entity_type", mobId));
+            messageUtils.send(
+                    player, config.getMessageConfig().general.cannotCapture, messageUtils.tag("entity_type", mobId));
             return;
         }
 
@@ -212,15 +213,23 @@ public class CaptureListener implements Listener {
         resultMeta.getPersistentDataContainer().set(Keys.MOB_DATA, PersistentDataType.STRING, snapshot.getAsString());
         resultMeta.getPersistentDataContainer().set(Keys.MOB_NAME, PersistentDataType.STRING, targetName);
 
-        if (mythicId != null) resultMeta.getPersistentDataContainer().set(Keys.MYTHIC_ID, PersistentDataType.STRING, mythicId);
+        if (mythicId != null)
+            resultMeta.getPersistentDataContainer().set(Keys.MYTHIC_ID, PersistentDataType.STRING, mythicId);
 
         String spawnReason = clickedMob.getPersistentDataContainer().get(Keys.SPAWN_REASON, PersistentDataType.STRING);
-        if (spawnReason == null || spawnReason.isEmpty()) spawnReason = clickedMob.getEntitySpawnReason().name();
+        if (spawnReason == null || spawnReason.isEmpty())
+            spawnReason = clickedMob.getEntitySpawnReason().name();
         resultMeta.getPersistentDataContainer().set(Keys.SPAWN_REASON, PersistentDataType.STRING, spawnReason);
-        resultMeta.getPersistentDataContainer().set(Keys.VESSEL_ID, PersistentDataType.STRING, UUID.randomUUID().toString());
+        resultMeta
+                .getPersistentDataContainer()
+                .set(
+                        Keys.VESSEL_ID,
+                        PersistentDataType.STRING,
+                        UUID.randomUUID().toString());
         resultItem.setItemMeta(resultMeta);
 
-        VesselCaptureEvent captureEvent = new VesselCaptureEvent(player, snapshot, loc, vesselType, targetName, resultItem);
+        VesselCaptureEvent captureEvent =
+                new VesselCaptureEvent(player, snapshot, loc, vesselType, targetName, resultItem);
         plugin.getServer().getPluginManager().callEvent(captureEvent);
 
         if (captureEvent.isCancelled()) return;

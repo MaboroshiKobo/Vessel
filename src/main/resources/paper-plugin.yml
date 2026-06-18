@@ -2,7 +2,7 @@ name: Vessel
 version: "${version}"
 main: org.maboroshi.vessel.Vessel
 loader: org.maboroshi.vessel.Loader
-description: A highly customizable Minecraft plugin for containing mobs in a vessel.
+description: Easily capture and store any entity in portable items, allowing you to move and release them anywhere.
 author: Maboroshi
 website: https://github.com/MaboroshiKobo/Vessel
 api-version: "26.1"
