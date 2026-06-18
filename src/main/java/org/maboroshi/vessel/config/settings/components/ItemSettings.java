@@ -26,7 +26,7 @@ public class ItemSettings {
 
     @Comment({
         "Specific material overrides based on the captured entity type.",
-        "If an entity is not listed here, it falls back to 'filledMaterial' above."
+        "If an entity is not listed here, it falls back to 'filled-material' above."
     })
     public Map<String, String> materialOverrides = new HashMap<>();
 

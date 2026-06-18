@@ -13,9 +13,6 @@ public class ReusableConfiguration {
     @Comment("Enable or disable the use of reusable vessels.")
     public boolean enabled = true;
 
-    @Comment("Capture and release restrictions.")
-    public RestrictionSettings restrictions = new RestrictionSettings();
-
     @Comment("Item settings for this vessel type.")
     public ItemSettings item = new ItemSettings(
             "amethyst_shard",
@@ -28,6 +25,9 @@ public class ReusableConfiguration {
                     "<reset>",
                     "<gray>Contains <white><entity_name></white> of type <white><entity_type></white>.</gray>"),
             Map.of("COW", "cow_spawn_egg"));
+
+    @Comment("Capture and release restrictions.")
+    public RestrictionSettings restrictions = new RestrictionSettings();
 
     @Comment("Event configuration")
     public ModuleEvents events = new ModuleEvents();
