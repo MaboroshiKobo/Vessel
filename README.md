@@ -16,7 +16,7 @@
   </p>
 
   <p>
-    <a href="https://docs.maboroshi.org/"><img alt="generic" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/generic_vector.svg"></a>
+    <a href="https://docs.maboroshi.org"><img alt="generic" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/generic_vector.svg"></a>
     <a href="https://discord.maboroshi.org"><img alt="discord-singular" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/social/discord-singular_vector.svg"></a>
   </p>
 </div>
@@ -25,9 +25,12 @@
 
 Vessel provides flexible capture-and-release mechanics with a wide range of configuration options:
 
-* Capture entities into special **vessel** items that can be *consumable* or *reusable*.
-* Configure the capture and release experience with **particle** and **sound** effects, alongside **actions** that allow for running commands (supports chance, permissions, global execution, and randomized picks).
-* **MiniMessage** support with optional **PlaceholderAPI** support.
+* Capture mobs into **consumable** or **reusable** vessel items.
+* **Material overrides** to dynamically change the item type/texture based on the exact vanilla mob or Mythic Mob ID you captured.
+* **MythicMobs** support to capture and release custom entities without losing data.
+* **Nexo** integration to use your own custom item models for empty and filled vessels.
+* Custom **effects and actions** to trigger sounds, particles, or console commands on use (supports chance, permissions, and random picks).
+* **MiniMessage** and **PlaceholderAPI** support for fancier texts.
 
 ### Prerequisites
 
@@ -35,7 +38,7 @@ To use this plugin, your server must be running **Paper** on `26.1` or higher, a
 
 ### Documentation & Support
 
-For a complete guide on features, commands, and configuration, please visit our [wiki](https://docs.maboroshi.org/). If you have questions or need to report a bug, join our [Discord server](https://discord.maboroshi.org).
+For a complete guide on features, commands, and configuration, please visit our [wiki](https://docs.maboroshi.org). If you have questions or need to report a bug, join our [Discord server](https://discord.maboroshi.org).
 
 ### Statistics
 
