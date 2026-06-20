@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/MaboroshiKobo/branding/refs/heads/main/projects/vessel/vessel.avif" width="180" alt="Vessel Logo" />
   <h1>Vessel</h1>
-  <p>A highly customizable Paper plugin for capturing and releasing entities into configurable vessel items.</p>
+  <p>Easily capture and store any entity in portable items, allowing you to move and release them anywhere.</p>
 
   <p>
     <img alt="paper" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/paper_vector.svg">
