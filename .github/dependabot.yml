@@ -6,6 +6,9 @@ updates:
       interval: "daily"
     assignees:
       - "muhdfdeen"
+    ignore:
+      - dependency-name: "*"
+        versions: ["*-SNAPSHOT"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
