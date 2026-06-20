@@ -3,6 +3,7 @@ package org.maboroshi.vessel.command;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import java.util.List;
 import java.util.stream.IntStream;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -67,6 +68,10 @@ public class VesselCommand {
         CommandSender sender = source.getSender();
         if (plugin.reload()) {
             plugin.getMessageUtils().send(sender, plugin.getConfigManager().getMessageConfig().commands.reloadSuccess);
+
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                player.updateCommands();
+            }
         } else {
             plugin.getMessageUtils()
                     .send(
