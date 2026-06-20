@@ -10,9 +10,9 @@
   </p>
 
   <p>
-    <a href="https://github.com/MaboroshiKobo/PartyAnimals"><img alt="github" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/github_vector.svg"></a>
-    <a href="https://hangar.papermc.io/Maboroshi/PartyAnimals"><img alt="hangar" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/hangar_vector.svg"></a>
-    <a href="https://modrinth.com/plugin/partyanimals"><img alt="modrinth" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/modrinth_vector.svg"></a>
+    <a href="https://github.com/MaboroshiKobo/Vessel"><img alt="github" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/github_vector.svg"></a>
+    <a href="https://hangar.papermc.io/Maboroshi/Vessel"><img alt="hangar" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/hangar_vector.svg"></a>
+    <a href="https://modrinth.com/plugin/vessel"><img alt="modrinth" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/modrinth_vector.svg"></a>
   </p>
 
   <p>
@@ -25,12 +25,12 @@
 
 Vessel provides flexible capture-and-release mechanics with a wide range of configuration options:
 
-* Capture mobs into **consumable** or **reusable** vessel items.
-* **Material overrides** to dynamically change the item type/texture based on the exact vanilla mob or Mythic Mob ID you captured.
-* **MythicMobs** support to capture and release custom entities without losing data.
-* **Nexo** integration to use your own custom item models for empty and filled vessels.
-* Custom **effects and actions** to trigger sounds, particles, or console commands on use (supports chance, permissions, and random picks).
-* **MiniMessage** and **PlaceholderAPI** support for fancier texts.
+* Create as many vessel templates as you want with independent behavior, item appearance, and usage restrictions.
+* Material overrides to dynamically change the item type or texture based on the exact entity that was captured.
+* MythicMobs support to capture and release custom entities.
+* Nexo integration to use your own custom item models for your vessel items.
+* Custom effects and actions to trigger sounds, particles, or console commands on use (supports chance, permissions, and random selections).
+* MiniMessage and PlaceholderAPI support for fully stylized and dynamic display text.
 
 ### Prerequisites
 
