@@ -47,10 +47,9 @@ public class ReleaseListener implements Listener {
 
     @EventHandler
     public void onRelease(PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getHand() != EquipmentSlot.HAND) return;
+        if (event.getHand() != EquipmentSlot.HAND) return;
 
-        Block block = event.getClickedBlock();
-        if (block == null) return;
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) return;
 
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
@@ -59,6 +58,8 @@ public class ReleaseListener implements Listener {
 
         ItemMeta meta = itemInHand.getItemMeta();
         if (!meta.getPersistentDataContainer().has(Keys.VESSEL_TYPE, PersistentDataType.STRING)) return;
+
+        event.setCancelled(true);
 
         String vesselType = meta.getPersistentDataContainer().get(Keys.VESSEL_TYPE, PersistentDataType.STRING);
         if (!"consumable".equals(vesselType) && !"reusable".equals(vesselType)) return;
@@ -70,8 +71,6 @@ public class ReleaseListener implements Listener {
 
         String nbtData = meta.getPersistentDataContainer().get(Keys.MOB_DATA, PersistentDataType.STRING);
         if (nbtData == null || nbtData.isEmpty()) return;
-
-        event.setCancelled(true);
 
         ConsumableConfiguration singleUse = config.getConsumableConfig();
         ReusableConfiguration multiUse = config.getReusableConfig();
@@ -85,6 +84,9 @@ public class ReleaseListener implements Listener {
                     messageUtils.tag("world", player.getWorld().getName()));
             return;
         }
+
+        Block block = event.getClickedBlock();
+        if (block == null) return;
 
         Location loc = findSafeReleaseLocation(block, event.getBlockFace());
         if (loc == null) {

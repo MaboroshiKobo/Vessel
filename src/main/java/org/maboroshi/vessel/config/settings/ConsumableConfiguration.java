@@ -15,8 +15,8 @@ public class ConsumableConfiguration {
 
     @Comment("Item configuration settings for this vessel type.")
     public ItemSettings item = new ItemSettings(
-            "amethyst_shard",
-            "echo_shard",
+            "egg",
+            "sniffer_egg",
             "<light_purple>Fragile Vessel</light_purple>",
             List.of("<gray>Right-click a mob to capture it.</gray>", "<red>Breaks upon release.</red>"),
             List.of(
@@ -24,7 +24,7 @@ public class ConsumableConfiguration {
                     "<red>Breaks upon release.</red>",
                     "<reset>",
                     "<gray>Contains <white><entity_name></white> of type <white><entity_type></white>.</gray>"),
-            Map.of("COW", "cow_spawn_egg"));
+            Map.of("<entity_type>", "<entity_type>_spawn_egg"));
 
     @Comment("Capture and release restrictions.")
     public RestrictionSettings restrictions = new RestrictionSettings();

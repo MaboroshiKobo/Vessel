@@ -57,8 +57,11 @@ public class CaptureListener implements Listener {
         if (!itemInHand.hasItemMeta()) return;
 
         ItemMeta meta = itemInHand.getItemMeta();
-        if (!meta.getPersistentDataContainer().has(Keys.VESSEL_TYPE, PersistentDataType.STRING)
-                || meta.getPersistentDataContainer().has(Keys.MOB_DATA, PersistentDataType.STRING)) return;
+        if (!meta.getPersistentDataContainer().has(Keys.VESSEL_TYPE, PersistentDataType.STRING)) return;
+
+        event.setCancelled(true);
+
+        if (meta.getPersistentDataContainer().has(Keys.MOB_DATA, PersistentDataType.STRING)) return;
 
         Entity target = event.getRightClicked();
         if (!(target instanceof Mob clickedMob)) return;
@@ -73,8 +76,6 @@ public class CaptureListener implements Listener {
             messageUtils.send(player, config.getMessageConfig().general.cannotUseVessel);
             return;
         }
-
-        event.setCancelled(true);
 
         boolean active = consumable ? config.getConsumableConfig().enabled : config.getReusableConfig().enabled;
         if (!active) return;

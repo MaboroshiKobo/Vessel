@@ -10,10 +10,10 @@ import java.util.Map;
 @Configuration
 public class ItemSettings {
     @Comment({"The material ID for the empty vessel.", "Nexo custom items are supported."})
-    public String material = "amethyst_shard";
+    public String material = "egg";
 
     @Comment({"The default material ID for the filled vessel.", "Nexo custom items are supported."})
-    public String filledMaterial = "echo_shard";
+    public String filledMaterial = "sniffer_egg";
 
     @Comment("Display name for the empty vessel.")
     public String displayName = "Vessel";

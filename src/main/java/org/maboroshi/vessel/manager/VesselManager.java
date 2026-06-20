@@ -107,6 +107,11 @@ public class VesselManager {
             return settings.materialOverrides.get(vanillaType);
         }
 
+        if (settings.materialOverrides.containsKey("<entity_type>")) {
+            String pattern = settings.materialOverrides.get("<entity_type>");
+            return pattern.replace("<entity_type>", vanillaType);
+        }
+
         return settings.filledMaterial;
     }
 
