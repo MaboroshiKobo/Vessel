@@ -2,6 +2,8 @@ package org.maboroshi.vessel;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import org.bstats.bukkit.Metrics;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.incendo.cloud.annotations.AnnotationParser;
 import org.incendo.cloud.execution.ExecutionCoordinator;
@@ -85,6 +87,12 @@ public final class Vessel extends JavaPlugin {
 
             if (cooldownHandler != null) {
                 cooldownHandler.clearCooldowns();
+            }
+
+            this.vesselManager = new VesselManager(this);
+
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                player.updateCommands();
             }
 
             return true;
