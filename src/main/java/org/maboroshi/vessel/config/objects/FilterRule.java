@@ -1,11 +1,11 @@
-package org.maboroshi.vessel.config.settings.components;
+package org.maboroshi.vessel.config.objects;
 
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
 import java.util.List;
 
 @Configuration
-public class FilterSettings {
+public class FilterRule {
     public enum FilterMode {
         NONE,
         BLACKLIST,
@@ -18,9 +18,9 @@ public class FilterSettings {
     @Comment("Values used by the selected filter mode.")
     public List<String> values = List.of();
 
-    public FilterSettings() {}
+    public FilterRule() {}
 
-    public FilterSettings(FilterMode mode, List<String> values) {
+    public FilterRule(FilterMode mode, List<String> values) {
         this.mode = mode;
         this.values = values;
     }

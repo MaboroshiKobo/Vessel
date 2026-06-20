@@ -5,23 +5,26 @@ import de.exlll.configlib.NameFormatters;
 import de.exlll.configlib.YamlConfigurationProperties;
 import de.exlll.configlib.YamlConfigurations;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import org.maboroshi.vessel.Vessel;
-import org.maboroshi.vessel.config.settings.ConsumableConfiguration;
 import org.maboroshi.vessel.config.settings.MainConfig;
 import org.maboroshi.vessel.config.settings.MainConfig.MainConfiguration;
 import org.maboroshi.vessel.config.settings.MessageConfig;
 import org.maboroshi.vessel.config.settings.MessageConfig.MessageConfiguration;
-import org.maboroshi.vessel.config.settings.ReusableConfiguration;
+import org.maboroshi.vessel.config.settings.VesselTemplate;
 
 public class ConfigManager {
     private final File dataFolder;
+    private final Vessel plugin;
+
     private MainConfiguration mainConfig;
     private MessageConfiguration messageConfig;
-    private ConsumableConfiguration consumableConfig;
-    private ReusableConfiguration reusableConfig;
+    private Map<String, VesselTemplate> vesselTemplates;
 
     private static final YamlConfigurationProperties PROPERTIES = ConfigLib.BUKKIT_DEFAULT_PROPERTIES.toBuilder()
             .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
@@ -29,28 +32,62 @@ public class ConfigManager {
 
     public ConfigManager(Vessel plugin, File dataFolder) {
         this.dataFolder = dataFolder;
+        this.plugin = plugin;
+        this.vesselTemplates = new HashMap<>();
     }
 
     public void loadConfig() {
         this.mainConfig = MainConfig.load(dataFolder);
-        File modulesDir = new File(dataFolder, "modules");
-        try {
-            Files.createDirectories(modulesDir.toPath());
-        } catch (IOException ignored) {
+        loadVesselTemplates();
+    }
+
+    private void loadVesselTemplates() {
+        vesselTemplates.clear();
+
+        File templateFolder = new File(dataFolder, "vessels");
+        if (!templateFolder.exists()) {
+            templateFolder.mkdirs();
         }
 
-        Path consumablePath = new File(modulesDir, "consumable.yml").toPath();
-        Path reusablePath = new File(modulesDir, "reusable.yml").toPath();
+        File defaultConsumableTemplate = new File(templateFolder, "consumable.yml");
+        if (!defaultConsumableTemplate.exists()) {
+            VesselTemplate.load(defaultConsumableTemplate);
+        }
 
-        ConsumableConfiguration consumable =
-                YamlConfigurations.update(consumablePath, ConsumableConfiguration.class, PROPERTIES);
-        ReusableConfiguration reusable =
-                YamlConfigurations.update(reusablePath, ReusableConfiguration.class, PROPERTIES);
+        File defaultReusableTemplate = new File(templateFolder, "reusable.yml");
+        if (!defaultReusableTemplate.exists()) {
+            VesselTemplate reusableTemplate = new VesselTemplate();
 
-        this.consumableConfig = consumable;
-        this.reusableConfig = reusable;
+            reusableTemplate.item.displayName = "<dark_aqua>Enduring Vessel</dark_aqua>";
+            reusableTemplate.item.lore = List.of(
+                    "<gray>Right-click a mob to capture it.</gray>", "<green>Can be reused multiple times.</green>");
+            reusableTemplate.item.filledLore = List.of(
+                    "<gray>Right-click to release the captured mob.</gray>",
+                    "<green>Can be reused multiple times.</green>",
+                    "<reset>",
+                    "<gray>Contains <white><entity_name></white> of type <white><entity_type></white>.</gray>");
+            reusableTemplate.behavior.returnEmptyVessel = true;
 
-        saveConfig();
+            YamlConfigurations.save(
+                    defaultReusableTemplate.toPath(), VesselTemplate.class, reusableTemplate, PROPERTIES);
+        }
+
+        File[] files = templateFolder.listFiles((dir, name) -> name.endsWith(".yml"));
+        if (files != null) {
+            for (File file : files) {
+                String fileName = file.getName();
+
+                if (fileName.contains(" ")) {
+                    plugin.getPluginLogger()
+                            .warn("Vessel template '" + fileName + "' contains spaces and was skipped.");
+                    continue;
+                }
+
+                String id = fileName.substring(0, fileName.lastIndexOf('.')).toLowerCase(Locale.ROOT);
+                VesselTemplate template = VesselTemplate.load(file);
+                vesselTemplates.put(id, template);
+            }
+        }
     }
 
     public void loadMessages() {
@@ -61,20 +98,9 @@ public class ConfigManager {
         Path settingsPath = new File(dataFolder, "config.yml").toPath();
         YamlConfigurations.save(settingsPath, MainConfiguration.class, mainConfig, PROPERTIES);
 
-        File modulesDir = new File(dataFolder, "modules");
-        try {
-            Files.createDirectories(modulesDir.toPath());
-        } catch (IOException ignored) {
-        }
-
-        Path consumablePath = new File(modulesDir, "consumable.yml").toPath();
-        Path reusablePath = new File(modulesDir, "reusable.yml").toPath();
-
-        if (this.consumableConfig != null) {
-            YamlConfigurations.save(consumablePath, ConsumableConfiguration.class, this.consumableConfig, PROPERTIES);
-        }
-        if (this.reusableConfig != null) {
-            YamlConfigurations.save(reusablePath, ReusableConfiguration.class, this.reusableConfig, PROPERTIES);
+        for (Map.Entry<String, VesselTemplate> entry : vesselTemplates.entrySet()) {
+            Path path = new File(dataFolder, "vessels/" + entry.getKey() + ".yml").toPath();
+            YamlConfigurations.save(path, VesselTemplate.class, entry.getValue(), PROPERTIES);
         }
     }
 
@@ -87,15 +113,19 @@ public class ConfigManager {
         return mainConfig;
     }
 
-    public ConsumableConfiguration getConsumableConfig() {
-        return consumableConfig;
-    }
-
-    public ReusableConfiguration getReusableConfig() {
-        return reusableConfig;
-    }
-
     public MessageConfiguration getMessageConfig() {
         return messageConfig;
+    }
+
+    public VesselTemplate getVesselTemplate(String id) {
+        return vesselTemplates.get(id.toLowerCase(Locale.ROOT));
+    }
+
+    public Map<String, VesselTemplate> getVesselTemplates() {
+        return vesselTemplates;
+    }
+
+    public Collection<String> getTemplateKeys() {
+        return vesselTemplates.keySet();
     }
 }

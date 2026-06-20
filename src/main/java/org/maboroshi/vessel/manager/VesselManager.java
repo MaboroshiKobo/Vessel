@@ -12,7 +12,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.config.ConfigManager;
-import org.maboroshi.vessel.config.settings.components.ItemSettings;
+import org.maboroshi.vessel.config.settings.VesselTemplate;
 import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Keys;
 import org.maboroshi.vessel.util.Logger;
@@ -29,27 +29,19 @@ public class VesselManager {
 
     public ItemStack createEmptyVessel(String type) {
         String normType = type.toLowerCase(Locale.ROOT);
-        ItemSettings settings;
-        Material fallback;
 
-        if (normType.equals("consumable")) {
-            if (!config.getConsumableConfig().enabled) return null;
-            settings = config.getConsumableConfig().item;
-            fallback = Material.AMETHYST_SHARD;
-        } else if (normType.equals("reusable")) {
-            if (!config.getReusableConfig().enabled) return null;
-            settings = config.getReusableConfig().item;
-            fallback = Material.ECHO_SHARD;
-        } else {
-            return null;
-        }
+        VesselTemplate template = config.getVesselTemplate(normType);
+        if (template == null) return null;
 
-        ItemStack item = resolveConfiguredItem(settings.material, fallback);
+        VesselTemplate.ItemSettings settings = template.item;
+
+        ItemStack item = resolveConfiguredItem(settings.material, Material.EGG);
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return null;
 
         ItemHandler.applyText(meta, settings.displayName, settings.lore);
-        meta.getPersistentDataContainer().set(Keys.VESSEL_TYPE, PersistentDataType.STRING, normType);
+
+        meta.getPersistentDataContainer().set(Keys.VESSEL_TEMPLATE, PersistentDataType.STRING, normType);
 
         item.setItemMeta(meta);
         return item;
@@ -57,25 +49,18 @@ public class VesselManager {
 
     public ItemStack createFilledVessel(String type, Entity capturedEntity, String entityCustomName) {
         String normType = type.toLowerCase(Locale.ROOT);
-        ItemSettings settings;
-        Material fallback;
 
-        if (normType.equals("consumable")) {
-            settings = config.getConsumableConfig().item;
-            fallback = Material.AMETHYST_SHARD;
-        } else if (normType.equals("reusable")) {
-            settings = config.getReusableConfig().item;
-            fallback = Material.ECHO_SHARD;
-        } else {
-            return null;
-        }
+        VesselTemplate template = config.getVesselTemplate(normType);
+        if (template == null) return null;
+
+        VesselTemplate.ItemSettings settings = template.item;
 
         String targetMaterialKey = resolveFilledMaterialKey(settings, capturedEntity);
-        ItemStack item = resolveConfiguredItem(targetMaterialKey, fallback);
+        ItemStack item = resolveConfiguredItem(targetMaterialKey, Material.SNIFFER_EGG);
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return null;
 
-        meta.getPersistentDataContainer().set(Keys.VESSEL_TYPE, PersistentDataType.STRING, normType);
+        meta.getPersistentDataContainer().set(Keys.VESSEL_TEMPLATE, PersistentDataType.STRING, normType);
 
         String rawTypeName =
                 capturedEntity.getType().name().toLowerCase(Locale.ROOT).replace("_", " ");
@@ -94,7 +79,7 @@ public class VesselManager {
         return item;
     }
 
-    private String resolveFilledMaterialKey(ItemSettings settings, Entity entity) {
+    private String resolveFilledMaterialKey(VesselTemplate.ItemSettings settings, Entity entity) {
         if (Bukkit.getPluginManager().isPluginEnabled("MythicMobs")) {
             String mythicId = MythicHook.getInternalName(entity);
             if (mythicId != null && settings.materialOverrides.containsKey(mythicId)) {

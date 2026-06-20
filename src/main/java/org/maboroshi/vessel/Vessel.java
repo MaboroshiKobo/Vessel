@@ -74,7 +74,7 @@ public final class Vessel extends JavaPlugin {
         @SuppressWarnings("unused")
         Metrics metrics = new Metrics(this, 31642);
 
-        new UpdateChecker(this).checkForUpdates();
+        new UpdateChecker(this).checkForUpdates(getServer().getConsoleSender());
     }
 
     public boolean reload() {

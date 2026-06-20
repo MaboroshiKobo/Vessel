@@ -4,7 +4,11 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.Plugin;
 
 public final class Keys {
+    public static NamespacedKey VESSEL_TEMPLATE;
+
+    @Deprecated
     public static NamespacedKey VESSEL_TYPE;
+
     public static NamespacedKey MOB_DATA;
     public static NamespacedKey MOB_NAME;
     public static NamespacedKey VESSEL_ID;
@@ -15,6 +19,7 @@ public final class Keys {
     private Keys() {}
 
     public static void init(Plugin plugin) {
+        VESSEL_TEMPLATE = new NamespacedKey(plugin, "template");
         VESSEL_TYPE = new NamespacedKey(plugin, "type");
         MOB_DATA = new NamespacedKey(plugin, "mob_data");
         MOB_NAME = new NamespacedKey(plugin, "mob_name");

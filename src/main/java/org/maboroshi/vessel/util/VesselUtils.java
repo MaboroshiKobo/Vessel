@@ -13,10 +13,37 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Raider;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.WaterMob;
-import org.maboroshi.vessel.config.settings.components.FilterSettings;
-import org.maboroshi.vessel.config.settings.components.FilterSettings.FilterMode;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
+import org.maboroshi.vessel.config.objects.FilterRule;
+import org.maboroshi.vessel.config.objects.FilterRule.FilterMode;
 
 public class VesselUtils {
+    public static String getTemplateId(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return null;
+
+        ItemMeta meta = item.getItemMeta();
+        var pdc = meta.getPersistentDataContainer();
+
+        if (pdc.has(Keys.VESSEL_TEMPLATE, PersistentDataType.STRING)) {
+            return pdc.get(Keys.VESSEL_TEMPLATE, PersistentDataType.STRING);
+        }
+
+        if (pdc.has(Keys.VESSEL_TYPE, PersistentDataType.STRING)) {
+            String templateId = pdc.get(Keys.VESSEL_TYPE, PersistentDataType.STRING);
+
+            pdc.remove(Keys.VESSEL_TYPE);
+            pdc.set(Keys.VESSEL_TEMPLATE, PersistentDataType.STRING, templateId);
+
+            item.setItemMeta(meta);
+
+            return templateId;
+        }
+
+        return null;
+    }
+
     public static boolean hasGroupPermission(Player player, Entity target, String action) {
         String prefix = "vessel." + action + ".";
         if (target instanceof Animals && player.hasPermission(prefix + "animals")) return true;
@@ -33,7 +60,7 @@ public class VesselUtils {
         return false;
     }
 
-    public static boolean isAllowed(String value, FilterSettings filter) {
+    public static boolean isAllowed(String value, FilterRule filter) {
         if (filter.mode == FilterMode.NONE) return true;
 
         boolean listed = filter.values.stream().anyMatch(value::equalsIgnoreCase);

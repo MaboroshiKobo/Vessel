@@ -22,10 +22,9 @@ import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.api.event.VesselCaptureEvent;
 import org.maboroshi.vessel.config.ConfigManager;
-import org.maboroshi.vessel.config.settings.ConsumableConfiguration;
-import org.maboroshi.vessel.config.settings.ReusableConfiguration;
-import org.maboroshi.vessel.config.settings.components.ExclusionSettings;
-import org.maboroshi.vessel.config.settings.components.FilterSettings;
+import org.maboroshi.vessel.config.objects.FilterRule;
+import org.maboroshi.vessel.config.settings.VesselTemplate;
+import org.maboroshi.vessel.config.settings.VesselTemplate.ExclusionSettings;
 import org.maboroshi.vessel.util.Keys;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
@@ -56,34 +55,28 @@ public class CaptureListener implements Listener {
 
         if (!itemInHand.hasItemMeta()) return;
 
-        ItemMeta meta = itemInHand.getItemMeta();
-        if (!meta.getPersistentDataContainer().has(Keys.VESSEL_TYPE, PersistentDataType.STRING)) return;
+        String vesselType = VesselUtils.getTemplateId(itemInHand);
+        if (vesselType == null) return;
 
         event.setCancelled(true);
 
+        ItemMeta meta = itemInHand.getItemMeta();
         if (meta.getPersistentDataContainer().has(Keys.MOB_DATA, PersistentDataType.STRING)) return;
 
         Entity target = event.getRightClicked();
         if (!(target instanceof Mob clickedMob)) return;
 
-        String vesselType = meta.getPersistentDataContainer().get(Keys.VESSEL_TYPE, PersistentDataType.STRING);
-        boolean consumable = "consumable".equals(vesselType);
-        boolean reusable = "reusable".equals(vesselType);
+        VesselTemplate template = config.getVesselTemplate(vesselType);
+        if (template == null) return;
 
-        if (!consumable && !reusable) return;
-
-        if (!player.hasPermission("vessel.use." + vesselType)) {
+        if (!player.hasPermission("vessel.use." + vesselType.toLowerCase(Locale.ROOT))) {
             messageUtils.send(player, config.getMessageConfig().general.cannotUseVessel);
             return;
         }
 
-        boolean active = consumable ? config.getConsumableConfig().enabled : config.getReusableConfig().enabled;
-        if (!active) return;
+        VesselTemplate.RestrictionSettings restrictions = template.restrictions;
 
-        ConsumableConfiguration singleUse = config.getConsumableConfig();
-        ReusableConfiguration multiUse = config.getReusableConfig();
-
-        FilterSettings worlds = consumable ? singleUse.restrictions.worlds : multiUse.restrictions.worlds;
+        FilterRule worlds = restrictions.worlds;
         if (!VesselUtils.isAllowed(player.getWorld().getName(), worlds)) {
             messageUtils.send(
                     player,
@@ -100,7 +93,7 @@ public class CaptureListener implements Listener {
         }
 
         String mobId = clickedMob.getType().name().toLowerCase(Locale.ROOT);
-        ExclusionSettings rules = consumable ? singleUse.restrictions.exclusions : multiUse.restrictions.exclusions;
+        ExclusionSettings rules = restrictions.exclusions;
 
         String rawMobName = clickedMob.getName() != null ? clickedMob.getName() : mobId;
         String safeMobName =
@@ -145,7 +138,7 @@ public class CaptureListener implements Listener {
             return;
         }
 
-        FilterSettings mobs = consumable ? singleUse.restrictions.entities : multiUse.restrictions.entities;
+        FilterRule mobs = restrictions.entities;
 
         if (!VesselUtils.isAllowed(mobId, mobs)) {
             log.debug("Player " + player.getName() + " tried to capture a disallowed entity.");

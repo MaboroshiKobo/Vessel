@@ -17,6 +17,7 @@ import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.config.ConfigManager;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
+import org.maboroshi.vessel.util.UpdateChecker;
 
 public class VesselCommand {
 
@@ -28,7 +29,7 @@ public class VesselCommand {
 
     @Suggestions("vesselTypes")
     public List<String> suggestVesselTypes(CommandContext<CommandSourceStack> context, String input) {
-        return List.of("consumable", "reusable");
+        return plugin.getConfigManager().getTemplateKeys().stream().toList();
     }
 
     @Suggestions("vesselAmounts")
@@ -56,6 +57,8 @@ public class VesselCommand {
                 messageUtils.tag("version", plugin.getPluginMeta().getVersion()),
                 messageUtils.tag(
                         "authors", String.join(", ", plugin.getPluginMeta().getAuthors())));
+
+        new UpdateChecker(plugin).checkForUpdates(sender);
     }
 
     @Command("vessel reload")

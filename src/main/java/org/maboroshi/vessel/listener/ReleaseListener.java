@@ -20,9 +20,8 @@ import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.api.event.VesselReleaseEvent;
 import org.maboroshi.vessel.config.ConfigManager;
-import org.maboroshi.vessel.config.settings.ConsumableConfiguration;
-import org.maboroshi.vessel.config.settings.ReusableConfiguration;
-import org.maboroshi.vessel.config.settings.components.FilterSettings;
+import org.maboroshi.vessel.config.objects.FilterRule;
+import org.maboroshi.vessel.config.settings.VesselTemplate;
 import org.maboroshi.vessel.handler.CooldownHandler;
 import org.maboroshi.vessel.util.Keys;
 import org.maboroshi.vessel.util.Logger;
@@ -56,27 +55,25 @@ public class ReleaseListener implements Listener {
 
         if (!itemInHand.hasItemMeta()) return;
 
-        ItemMeta meta = itemInHand.getItemMeta();
-        if (!meta.getPersistentDataContainer().has(Keys.VESSEL_TYPE, PersistentDataType.STRING)) return;
+        String vesselType = VesselUtils.getTemplateId(itemInHand);
+        if (vesselType == null) return;
 
         event.setCancelled(true);
 
-        String vesselType = meta.getPersistentDataContainer().get(Keys.VESSEL_TYPE, PersistentDataType.STRING);
-        if (!"consumable".equals(vesselType) && !"reusable".equals(vesselType)) return;
+        VesselTemplate template = config.getVesselTemplate(vesselType);
+        if (template == null) return;
 
-        if (!player.hasPermission("vessel.use." + vesselType)) {
+        if (!player.hasPermission("vessel.use." + vesselType.toLowerCase(Locale.ROOT))) {
             messageUtils.send(player, config.getMessageConfig().general.cannotUseVessel);
             return;
         }
 
+        ItemMeta meta = itemInHand.getItemMeta();
+
         String nbtData = meta.getPersistentDataContainer().get(Keys.MOB_DATA, PersistentDataType.STRING);
         if (nbtData == null || nbtData.isEmpty()) return;
 
-        ConsumableConfiguration singleUse = config.getConsumableConfig();
-        ReusableConfiguration multiUse = config.getReusableConfig();
-        FilterSettings worlds =
-                "consumable".equals(vesselType) ? singleUse.restrictions.worlds : multiUse.restrictions.worlds;
-
+        FilterRule worlds = template.restrictions.worlds;
         if (!VesselUtils.isAllowed(player.getWorld().getName(), worlds)) {
             messageUtils.send(
                     player,
@@ -153,20 +150,25 @@ public class ReleaseListener implements Listener {
 
         releasedMob.getPersistentDataContainer().set(Keys.FROM_VESSEL, PersistentDataType.BOOLEAN, true);
 
-        if ("consumable".equals(vesselType)) {
-            itemInHand.subtract();
-        } else if ("reusable".equals(vesselType)) {
-            ItemStack cleanedVessel = plugin.getVesselManager().createEmptyVessel(vesselType);
-            if (cleanedVessel == null) return;
+        VesselTemplate.BehaviorSettings behavior = template.behavior;
 
-            if (itemInHand.getAmount() > 1) {
-                itemInHand.subtract();
-                player.getInventory()
-                        .addItem(cleanedVessel)
-                        .values()
-                        .forEach(leftover -> player.getWorld().dropItemNaturally(player.getLocation(), leftover));
+        if (behavior.consumeOnRelease) {
+            if (behavior.returnEmptyVessel) {
+                ItemStack cleanedVessel = plugin.getVesselManager().createEmptyVessel(vesselType);
+                if (cleanedVessel != null) {
+                    if (itemInHand.getAmount() > 1) {
+                        itemInHand.subtract();
+                        player.getInventory()
+                                .addItem(cleanedVessel)
+                                .values()
+                                .forEach(leftover ->
+                                        player.getWorld().dropItemNaturally(player.getLocation(), leftover));
+                    } else {
+                        player.getInventory().setItemInMainHand(cleanedVessel);
+                    }
+                }
             } else {
-                player.getInventory().setItemInMainHand(cleanedVessel);
+                itemInHand.subtract();
             }
         }
 
