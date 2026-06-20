@@ -3,6 +3,7 @@ package org.maboroshi.vessel.command;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import java.util.List;
 import java.util.stream.IntStream;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -17,6 +18,7 @@ import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.config.ConfigManager;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
+import org.maboroshi.vessel.util.UpdateChecker;
 
 public class VesselCommand {
 
@@ -28,7 +30,7 @@ public class VesselCommand {
 
     @Suggestions("vesselTypes")
     public List<String> suggestVesselTypes(CommandContext<CommandSourceStack> context, String input) {
-        return List.of("consumable", "reusable");
+        return plugin.getConfigManager().getTemplateKeys().stream().toList();
     }
 
     @Suggestions("vesselAmounts")
@@ -56,6 +58,8 @@ public class VesselCommand {
                 messageUtils.tag("version", plugin.getPluginMeta().getVersion()),
                 messageUtils.tag(
                         "authors", String.join(", ", plugin.getPluginMeta().getAuthors())));
+
+        new UpdateChecker(plugin).checkForUpdates(sender);
     }
 
     @Command("vessel reload")
@@ -64,6 +68,10 @@ public class VesselCommand {
         CommandSender sender = source.getSender();
         if (plugin.reload()) {
             plugin.getMessageUtils().send(sender, plugin.getConfigManager().getMessageConfig().commands.reloadSuccess);
+
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                player.updateCommands();
+            }
         } else {
             plugin.getMessageUtils()
                     .send(

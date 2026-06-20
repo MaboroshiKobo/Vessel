@@ -2,12 +2,12 @@ package org.maboroshi.vessel.handler;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import java.time.Duration;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 public class CooldownHandler {
     private final Cache<UUID, Long> interactionCooldowns =
-            CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
+            CacheBuilder.newBuilder().expireAfterWrite(Duration.ofMinutes(5)).build();
 
     public boolean isOnCooldown(UUID playerId, long cooldownMs) {
         Long last = interactionCooldowns.getIfPresent(playerId);

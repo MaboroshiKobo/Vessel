@@ -1,9 +1,6 @@
 package org.maboroshi.vessel.listener;
 
-import io.lumine.mythic.bukkit.MythicBukkit;
 import java.util.Locale;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -23,14 +20,13 @@ import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.api.event.VesselReleaseEvent;
 import org.maboroshi.vessel.config.ConfigManager;
-import org.maboroshi.vessel.config.settings.modules.ConsumableConfiguration;
-import org.maboroshi.vessel.config.settings.modules.ReusableConfiguration;
-import org.maboroshi.vessel.config.settings.shared.FilterConfiguration;
+import org.maboroshi.vessel.config.objects.FilterRule;
+import org.maboroshi.vessel.config.settings.VesselTemplate;
 import org.maboroshi.vessel.handler.CooldownHandler;
-import org.maboroshi.vessel.handler.ItemHandler;
 import org.maboroshi.vessel.util.Keys;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
+import org.maboroshi.vessel.util.MythicHook;
 import org.maboroshi.vessel.util.VesselUtils;
 
 public class ReleaseListener implements Listener {
@@ -50,36 +46,34 @@ public class ReleaseListener implements Listener {
 
     @EventHandler
     public void onRelease(PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getHand() != EquipmentSlot.HAND) return;
+        if (event.getHand() != EquipmentSlot.HAND) return;
 
-        Block block = event.getClickedBlock();
-        if (block == null) return;
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) return;
 
         Player player = event.getPlayer();
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
 
         if (!itemInHand.hasItemMeta()) return;
 
-        ItemMeta meta = itemInHand.getItemMeta();
-        if (!meta.getPersistentDataContainer().has(Keys.VESSEL_TYPE, PersistentDataType.STRING)) return;
+        String vesselType = VesselUtils.getTemplateId(itemInHand);
+        if (vesselType == null) return;
 
-        String vesselType = meta.getPersistentDataContainer().get(Keys.VESSEL_TYPE, PersistentDataType.STRING);
-        if (!"consumable".equals(vesselType) && !"reusable".equals(vesselType)) return;
+        event.setCancelled(true);
 
-        if (!player.hasPermission("vessel.use." + vesselType)) {
+        VesselTemplate template = config.getVesselTemplate(vesselType);
+        if (template == null) return;
+
+        if (!player.hasPermission("vessel.use." + vesselType.toLowerCase(Locale.ROOT))) {
             messageUtils.send(player, config.getMessageConfig().general.cannotUseVessel);
             return;
         }
 
+        ItemMeta meta = itemInHand.getItemMeta();
+
         String nbtData = meta.getPersistentDataContainer().get(Keys.MOB_DATA, PersistentDataType.STRING);
         if (nbtData == null || nbtData.isEmpty()) return;
 
-        event.setCancelled(true);
-
-        ConsumableConfiguration oneUse = config.getConsumableConfig();
-        ReusableConfiguration multiUse = config.getReusableConfig();
-        FilterConfiguration worlds = "consumable".equals(vesselType) ? oneUse.worlds : multiUse.worlds;
-
+        FilterRule worlds = template.restrictions.worlds;
         if (!VesselUtils.isAllowed(player.getWorld().getName(), worlds)) {
             messageUtils.send(
                     player,
@@ -87,6 +81,9 @@ public class ReleaseListener implements Listener {
                     messageUtils.tag("world", player.getWorld().getName()));
             return;
         }
+
+        Block block = event.getClickedBlock();
+        if (block == null) return;
 
         Location loc = findSafeReleaseLocation(block, event.getBlockFace());
         if (loc == null) {
@@ -119,14 +116,8 @@ public class ReleaseListener implements Listener {
         String savedName = meta.getPersistentDataContainer().get(Keys.MOB_NAME, PersistentDataType.STRING);
         String savedReason = meta.getPersistentDataContainer().get(Keys.SPAWN_REASON, PersistentDataType.STRING);
 
-        String safeSavedName = null;
-        if (savedName != null) {
-            safeSavedName = MiniMessage.miniMessage()
-                    .serialize(LegacyComponentSerializer.legacySection().deserialize(savedName));
-        }
-
         VesselReleaseEvent releaseEvent = new VesselReleaseEvent(
-                player, snapshot, loc, vesselType, safeSavedName != null ? safeSavedName : mobId, itemInHand);
+                player, snapshot, loc, vesselType, savedName != null ? savedName : mobId, itemInHand);
         plugin.getServer().getPluginManager().callEvent(releaseEvent);
 
         if (releaseEvent.isCancelled()) return;
@@ -137,11 +128,7 @@ public class ReleaseListener implements Listener {
 
         if (mythic && Bukkit.getPluginManager().isPluginEnabled("MythicMobs")) {
             try {
-                releasedMob = MythicBukkit.inst()
-                        .getMobManager()
-                        .spawnMob(mythicId, loc)
-                        .getEntity()
-                        .getBukkitEntity();
+                releasedMob = MythicHook.spawnMob(mythicId, loc);
 
                 if (releasedMob != null && savedReason != null) {
                     releasedMob
@@ -157,36 +144,31 @@ public class ReleaseListener implements Listener {
         }
 
         if (releasedMob == null) {
-            log.error(
-                    "Failed to spawn entity from snapshot during release. The spawn was likely vetoed by another plugin or blocked by Paper's internal entity integrity checks.");
+            log.error("Failed to spawn entity from snapshot during release.");
             return;
         }
 
         releasedMob.getPersistentDataContainer().set(Keys.FROM_VESSEL, PersistentDataType.BOOLEAN, true);
 
-        if ("consumable".equals(vesselType)) {
-            itemInHand.subtract();
-        } else if ("reusable".equals(vesselType)) {
-            ItemStack cleanedVessel = itemInHand.clone();
-            cleanedVessel.setAmount(1);
-            ItemMeta cleanedMeta = cleanedVessel.getItemMeta();
+        VesselTemplate.BehaviorSettings behavior = template.behavior;
 
-            cleanedMeta.getPersistentDataContainer().remove(Keys.MOB_DATA);
-            cleanedMeta.getPersistentDataContainer().remove(Keys.MOB_NAME);
-            cleanedMeta.getPersistentDataContainer().remove(Keys.SPAWN_REASON);
-            cleanedMeta.getPersistentDataContainer().remove(Keys.VESSEL_ID);
-            cleanedMeta.getPersistentDataContainer().remove(Keys.MYTHIC_ID);
-            ItemHandler.applyText(cleanedMeta, config.getReusableConfig().displayName, config.getReusableConfig().lore);
-            cleanedVessel.setItemMeta(cleanedMeta);
-
-            if (itemInHand.getAmount() > 1) {
-                itemInHand.subtract();
-                player.getInventory()
-                        .addItem(cleanedVessel)
-                        .values()
-                        .forEach(leftover -> player.getWorld().dropItemNaturally(player.getLocation(), leftover));
+        if (behavior.consumeOnRelease) {
+            if (behavior.returnEmptyVessel) {
+                ItemStack cleanedVessel = plugin.getVesselManager().createEmptyVessel(vesselType);
+                if (cleanedVessel != null) {
+                    if (itemInHand.getAmount() > 1) {
+                        itemInHand.subtract();
+                        player.getInventory()
+                                .addItem(cleanedVessel)
+                                .values()
+                                .forEach(leftover ->
+                                        player.getWorld().dropItemNaturally(player.getLocation(), leftover));
+                    } else {
+                        player.getInventory().setItemInMainHand(cleanedVessel);
+                    }
+                }
             } else {
-                player.getInventory().setItemInMainHand(cleanedVessel);
+                itemInHand.subtract();
             }
         }
 

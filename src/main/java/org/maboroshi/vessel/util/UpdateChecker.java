@@ -8,6 +8,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.concurrent.CompletableFuture;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.maboroshi.vessel.Vessel;
 
 public class UpdateChecker {
@@ -17,7 +19,7 @@ public class UpdateChecker {
         this.plugin = plugin;
     }
 
-    public void checkForUpdates() {
+    public void checkForUpdates(CommandSender requester) {
         CompletableFuture.supplyAsync(() -> {
                     try {
                         HttpClient client = HttpClient.newHttpClient();
@@ -42,11 +44,25 @@ public class UpdateChecker {
                         String currentVersion = plugin.getPluginMeta().getVersion();
 
                         if (isNewer(currentVersion, tagName)) {
-                            plugin.getPluginLogger()
-                                    .warn("A new version is available! (Current: " + currentVersion + " | Latest: "
-                                            + tagName + ")");
-                            plugin.getPluginLogger()
-                                    .warn("Download it at: https://github.com/MaboroshiKobo/Vessel/releases/latest");
+                            if (requester instanceof ConsoleCommandSender) {
+                                plugin.getPluginLogger()
+                                        .warn("A new version is available! (Current: " + currentVersion + " | Latest: "
+                                                + tagName + ")");
+                                plugin.getPluginLogger()
+                                        .warn(
+                                                "Download it at: https://github.com/MaboroshiKobo/Vessel/releases/latest");
+                            } else {
+                                MessageUtils messageUtils = plugin.getMessageUtils();
+                                messageUtils.send(
+                                        requester,
+                                        "<prefix> A new update is available! <gray>(v" + tagName + ")</gray>");
+                                messageUtils.send(
+                                        requester,
+                                        "<prefix> <click:open_url:'https://github.com/MaboroshiKobo/Vessel/releases/latest'><u>Click here to view the update on GitHub</u></click>.");
+                            }
+                        } else if (!(requester instanceof ConsoleCommandSender)) {
+                            plugin.getMessageUtils()
+                                    .send(requester, "<prefix> Vessel is up to date (v" + currentVersion + ").");
                         }
                     }
                 });

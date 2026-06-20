@@ -1,10 +1,7 @@
 package org.maboroshi.vessel.listener;
 
-import io.lumine.mythic.bukkit.MythicBukkit;
-import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -25,14 +22,13 @@ import org.bukkit.persistence.PersistentDataType;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.api.event.VesselCaptureEvent;
 import org.maboroshi.vessel.config.ConfigManager;
-import org.maboroshi.vessel.config.settings.modules.ConsumableConfiguration;
-import org.maboroshi.vessel.config.settings.modules.ReusableConfiguration;
-import org.maboroshi.vessel.config.settings.shared.ExclusionConfiguration;
-import org.maboroshi.vessel.config.settings.shared.FilterConfiguration;
-import org.maboroshi.vessel.handler.ItemHandler;
+import org.maboroshi.vessel.config.objects.FilterRule;
+import org.maboroshi.vessel.config.settings.VesselTemplate;
+import org.maboroshi.vessel.config.settings.VesselTemplate.ExclusionSettings;
 import org.maboroshi.vessel.util.Keys;
 import org.maboroshi.vessel.util.Logger;
 import org.maboroshi.vessel.util.MessageUtils;
+import org.maboroshi.vessel.util.MythicHook;
 import org.maboroshi.vessel.util.VesselUtils;
 
 public class CaptureListener implements Listener {
@@ -40,6 +36,8 @@ public class CaptureListener implements Listener {
     private final Logger log;
     private final MessageUtils messageUtils;
     private final ConfigManager config;
+
+    private static final MiniMessage mm = MiniMessage.miniMessage();
 
     public CaptureListener(Vessel plugin) {
         this.plugin = plugin;
@@ -57,37 +55,28 @@ public class CaptureListener implements Listener {
 
         if (!itemInHand.hasItemMeta()) return;
 
+        String vesselType = VesselUtils.getTemplateId(itemInHand);
+        if (vesselType == null) return;
+
+        event.setCancelled(true);
+
         ItemMeta meta = itemInHand.getItemMeta();
-        if (!meta.getPersistentDataContainer().has(Keys.VESSEL_TYPE, PersistentDataType.STRING)
-                || meta.getPersistentDataContainer().has(Keys.MOB_DATA, PersistentDataType.STRING)) {
-            return;
-        }
+        if (meta.getPersistentDataContainer().has(Keys.MOB_DATA, PersistentDataType.STRING)) return;
 
         Entity target = event.getRightClicked();
-        if (!(target instanceof Mob clickedMob)) {
-            return;
-        }
+        if (!(target instanceof Mob clickedMob)) return;
 
-        String vesselType = meta.getPersistentDataContainer().get(Keys.VESSEL_TYPE, PersistentDataType.STRING);
-        boolean consumable = "consumable".equals(vesselType);
-        boolean reusable = "reusable".equals(vesselType);
+        VesselTemplate template = config.getVesselTemplate(vesselType);
+        if (template == null) return;
 
-        if (!consumable && !reusable) return;
-
-        if (!player.hasPermission("vessel.use." + vesselType)) {
+        if (!player.hasPermission("vessel.use." + vesselType.toLowerCase(Locale.ROOT))) {
             messageUtils.send(player, config.getMessageConfig().general.cannotUseVessel);
             return;
         }
 
-        event.setCancelled(true);
+        VesselTemplate.RestrictionSettings restrictions = template.restrictions;
 
-        boolean active = consumable ? config.getConsumableConfig().enabled : config.getReusableConfig().enabled;
-        if (!active) return;
-
-        ConsumableConfiguration oneUse = config.getConsumableConfig();
-        ReusableConfiguration multiUse = config.getReusableConfig();
-
-        FilterConfiguration worlds = consumable ? oneUse.worlds : multiUse.worlds;
+        FilterRule worlds = restrictions.worlds;
         if (!VesselUtils.isAllowed(player.getWorld().getName(), worlds)) {
             messageUtils.send(
                     player,
@@ -104,11 +93,11 @@ public class CaptureListener implements Listener {
         }
 
         String mobId = clickedMob.getType().name().toLowerCase(Locale.ROOT);
-        ExclusionConfiguration rules = consumable ? oneUse.exclusions : multiUse.exclusions;
+        ExclusionSettings rules = restrictions.exclusions;
 
         String rawMobName = clickedMob.getName() != null ? clickedMob.getName() : mobId;
-        String safeMobName = MiniMessage.miniMessage()
-                .serialize(LegacyComponentSerializer.legacySection().deserialize(rawMobName));
+        String safeMobName =
+                mm.serialize(LegacyComponentSerializer.legacySection().deserialize(rawMobName));
 
         if (clickedMob.getPersistentDataContainer().has(Keys.SPAWN_REASON, PersistentDataType.STRING)) {
             String reason = clickedMob.getPersistentDataContainer().get(Keys.SPAWN_REASON, PersistentDataType.STRING);
@@ -149,7 +138,7 @@ public class CaptureListener implements Listener {
             return;
         }
 
-        FilterConfiguration mobs = consumable ? oneUse.entities : multiUse.entities;
+        FilterRule mobs = restrictions.entities;
 
         if (!VesselUtils.isAllowed(mobId, mobs)) {
             log.debug("Player " + player.getName() + " tried to capture a disallowed entity.");
@@ -171,34 +160,20 @@ public class CaptureListener implements Listener {
 
         if (plugin.getCooldownHandler().isOnCooldown(player.getUniqueId(), config.getMainConfig().cooldown)) return;
 
-        ItemStack resultItem = itemInHand.clone();
-        resultItem.setAmount(1);
-        ItemMeta resultMeta = resultItem.getItemMeta();
-
-        String targetName = clickedMob.getName() != null
+        String rawTargetName = clickedMob.getName() != null
                 ? clickedMob.getName()
-                : clickedMob.getType().toString();
-        String targetType = clickedMob.getType().toString();
+                : clickedMob.getType().name();
+        String mythicId = null;
 
         if (Bukkit.getPluginManager().isPluginEnabled("MythicMobs")) {
-            var activeMobOpt = MythicBukkit.inst().getMobManager().getActiveMob(clickedMob.getUniqueId());
-            if (activeMobOpt.isPresent()) {
-                var activeMob = activeMobOpt.get();
-                String internalName = activeMob.getType().getInternalName();
-                resultMeta.getPersistentDataContainer().set(Keys.MYTHIC_ID, PersistentDataType.STRING, internalName);
-
-                targetType = internalName;
-                targetName = activeMob.getDisplayName() != null
-                                && !activeMob.getDisplayName().isEmpty()
-                        ? activeMob.getDisplayName()
-                        : internalName;
+            mythicId = MythicHook.getInternalName(clickedMob);
+            if (mythicId != null) {
+                rawTargetName = MythicHook.getDisplayName(clickedMob);
             }
         }
 
-        final String finalName = targetName;
-        final String finalType = targetType;
-        final String miniMessageName = MiniMessage.miniMessage()
-                .serialize(LegacyComponentSerializer.legacySection().deserialize(finalName));
+        String targetName =
+                mm.serialize(LegacyComponentSerializer.legacySection().deserialize(rawTargetName));
 
         Component customNameComponent = clickedMob.customName();
         if (customNameComponent != null) {
@@ -211,25 +186,33 @@ public class CaptureListener implements Listener {
 
         EntitySnapshot snapshot = clickedMob.createSnapshot();
         if (snapshot == null) {
-            Entity temp = clickedMob.getWorld().spawnEntity(clickedMob.getLocation(), clickedMob.getType());
-            snapshot = temp.createSnapshot();
-            temp.remove();
+            Class<? extends Entity> entityClass = clickedMob.getType().getEntityClass();
+            if (entityClass != null) {
+                Entity temp = clickedMob.getWorld().createEntity(clickedMob.getLocation(), entityClass);
+                snapshot = temp.createSnapshot();
+            }
         }
 
         if (snapshot == null) {
-            log.error("Failed to create an EntitySnapshot for entity type: " + clickedMob.getType()
-                    + ". Capture aborted.");
+            log.debug("Failed to create an EntitySnapshot for entity type: " + clickedMob.getType());
             return;
         }
 
-        resultMeta.getPersistentDataContainer().set(Keys.MOB_DATA, PersistentDataType.STRING, snapshot.getAsString());
-        resultMeta.getPersistentDataContainer().set(Keys.MOB_NAME, PersistentDataType.STRING, finalName);
-        resultMeta.getPersistentDataContainer().set(Keys.VESSEL_TYPE, PersistentDataType.STRING, vesselType);
-        String spawnReason = clickedMob.getPersistentDataContainer().get(Keys.SPAWN_REASON, PersistentDataType.STRING);
-        if (spawnReason == null || spawnReason.isEmpty()) {
-            spawnReason = clickedMob.getEntitySpawnReason().name();
-        }
+        ItemStack resultItem = plugin.getVesselManager().createFilledVessel(vesselType, clickedMob, targetName);
+        if (resultItem == null) return;
 
+        ItemMeta resultMeta = resultItem.getItemMeta();
+        if (resultMeta == null) return;
+
+        resultMeta.getPersistentDataContainer().set(Keys.MOB_DATA, PersistentDataType.STRING, snapshot.getAsString());
+        resultMeta.getPersistentDataContainer().set(Keys.MOB_NAME, PersistentDataType.STRING, targetName);
+
+        if (mythicId != null)
+            resultMeta.getPersistentDataContainer().set(Keys.MYTHIC_ID, PersistentDataType.STRING, mythicId);
+
+        String spawnReason = clickedMob.getPersistentDataContainer().get(Keys.SPAWN_REASON, PersistentDataType.STRING);
+        if (spawnReason == null || spawnReason.isEmpty())
+            spawnReason = clickedMob.getEntitySpawnReason().name();
         resultMeta.getPersistentDataContainer().set(Keys.SPAWN_REASON, PersistentDataType.STRING, spawnReason);
         resultMeta
                 .getPersistentDataContainer()
@@ -237,22 +220,10 @@ public class CaptureListener implements Listener {
                         Keys.VESSEL_ID,
                         PersistentDataType.STRING,
                         UUID.randomUUID().toString());
-
-        String nameFormat = consumable ? oneUse.displayName : multiUse.displayName;
-        List<String> rawLore = consumable ? oneUse.filledLore : multiUse.filledLore;
-
-        ItemHandler.applyText(
-                resultMeta,
-                nameFormat,
-                rawLore.stream()
-                        .map(line ->
-                                line.replace("<entity_name>", miniMessageName).replace("<entity_type>", finalType))
-                        .toList());
-
         resultItem.setItemMeta(resultMeta);
 
         VesselCaptureEvent captureEvent =
-                new VesselCaptureEvent(player, snapshot, loc, vesselType, finalName, resultItem);
+                new VesselCaptureEvent(player, snapshot, loc, vesselType, targetName, resultItem);
         plugin.getServer().getPluginManager().callEvent(captureEvent);
 
         if (captureEvent.isCancelled()) return;
