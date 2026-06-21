@@ -97,7 +97,7 @@ public final class Vessel extends JavaPlugin {
 
             return true;
         } catch (Exception e) {
-            log.error("Failed to reload Vessel configuration: " + e.getMessage());
+            getLogger().severe("Failed to reload Vessel configuration: " + e.getMessage());
             return false;
         }
     }

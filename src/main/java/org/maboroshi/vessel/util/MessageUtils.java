@@ -45,8 +45,11 @@ public class MessageUtils {
             parsedMessage = PlaceholderAPI.setPlaceholders(player, parsedMessage);
         }
 
-        TagResolver prefixTag = Placeholder.parsed(
-                "prefix", config != null && config.getMessageConfig() != null ? config.getMessageConfig().prefix : "");
+        TagResolver prefixTag = Placeholder.component(
+                "prefix",
+                config != null && config.getMessageConfig() != null
+                        ? config.getMessageConfig().prefix
+                        : Component.empty());
 
         TagResolver finalResolver;
         if (receiver instanceof Player player) {
@@ -64,8 +67,11 @@ public class MessageUtils {
         if (message == null || message.isEmpty()) return Component.empty();
 
         String parsedMessage = message;
-        TagResolver prefixTag = Placeholder.parsed(
-                "prefix", config != null && config.getMessageConfig() != null ? config.getMessageConfig().prefix : "");
+        TagResolver prefixTag = Placeholder.component(
+                "prefix",
+                config != null && config.getMessageConfig() != null
+                        ? config.getMessageConfig().prefix
+                        : Component.empty());
 
         TagResolver finalResolver = TagResolver.resolver(TagResolver.resolver(tags), prefixTag);
         return MINI_MESSAGE.deserialize(parsedMessage, finalResolver);

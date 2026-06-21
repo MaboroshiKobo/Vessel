@@ -26,7 +26,7 @@ public class ConfigManager {
     private MessageConfiguration messageConfig;
     private Map<String, VesselTemplate> vesselTemplates;
 
-    private static final YamlConfigurationProperties PROPERTIES = ConfigLib.BUKKIT_DEFAULT_PROPERTIES.toBuilder()
+    private static final YamlConfigurationProperties PROPERTIES = ConfigLib.PAPER_DEFAULT_PROPERTIES.toBuilder()
             .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
             .build();
 

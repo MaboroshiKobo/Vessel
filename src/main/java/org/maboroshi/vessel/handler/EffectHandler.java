@@ -1,12 +1,12 @@
 package org.maboroshi.vessel.handler;
 
+import net.kyori.adventure.sound.Sound;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.maboroshi.vessel.config.objects.effects.EffectGroup;
 import org.maboroshi.vessel.config.objects.effects.ParticleEffect;
-import org.maboroshi.vessel.config.objects.effects.SoundEffect;
 import org.maboroshi.vessel.util.Logger;
 
 public class EffectHandler {
@@ -21,7 +21,7 @@ public class EffectHandler {
         if (group == null) return;
 
         if (group.sounds != null && !group.sounds.isEmpty()) {
-            for (SoundEffect sound : group.sounds.values()) {
+            for (Sound sound : group.sounds.values()) {
                 playSound(sound, location, globalSound);
             }
         }
@@ -35,21 +35,21 @@ public class EffectHandler {
         }
     }
 
-    private void playSound(SoundEffect sound, Location location, boolean globalSound) {
-        if (sound.type == null || sound.type.isEmpty()) return;
+    private void playSound(Sound sound, Location location, boolean globalSound) {
+        if (sound == null) return;
 
         try {
             if (globalSound) {
                 for (Player p : Bukkit.getOnlinePlayers()) {
-                    p.playSound(p.getLocation(), sound.type, sound.volume, sound.pitch);
+                    p.playSound(sound);
                 }
             } else {
                 if (location != null && location.getWorld() != null) {
-                    location.getWorld().playSound(location, sound.type, sound.volume, sound.pitch);
+                    location.getWorld().playSound(sound, location.getX(), location.getY(), location.getZ());
                 }
             }
         } catch (Exception e) {
-            log.debug("Failed to play sound: " + sound.type);
+            log.debug("Failed to play sound: " + sound.name().asString());
         }
     }
 

@@ -18,11 +18,7 @@ public class Logger {
     }
 
     private void log(String colorTag, String message) {
-        ConfigManager config = getConfig();
-        String prefix;
-        if (config != null && config.getMessageConfig() != null) prefix = config.getMessageConfig().prefix;
-        else prefix = "<color:#F2CDCD><bold>Vessel</bold> ➟ </color>";
-        messageUtils.send(Bukkit.getConsoleSender(), prefix + colorTag + message);
+        messageUtils.send(Bukkit.getConsoleSender(), "<prefix> " + colorTag + message);
     }
 
     public void debug(String message) {
@@ -31,7 +27,7 @@ public class Logger {
     }
 
     public void info(String message) {
-        log("", message);
+        log("<white>", message);
     }
 
     public void warn(String message) {

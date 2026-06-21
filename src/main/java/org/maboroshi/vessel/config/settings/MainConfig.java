@@ -11,7 +11,7 @@ import java.nio.file.Path;
 
 public class MainConfig {
     public static MainConfiguration load(File dataFolder) {
-        YamlConfigurationProperties properties = ConfigLib.BUKKIT_DEFAULT_PROPERTIES.toBuilder()
+        YamlConfigurationProperties properties = ConfigLib.PAPER_DEFAULT_PROPERTIES.toBuilder()
                 .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
                 .build();
         Path configFile = new File(dataFolder, "config.yml").toPath();

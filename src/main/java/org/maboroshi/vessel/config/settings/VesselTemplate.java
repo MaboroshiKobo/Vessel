@@ -12,11 +12,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
 import org.maboroshi.vessel.config.objects.CommandAction;
 import org.maboroshi.vessel.config.objects.FilterRule;
 import org.maboroshi.vessel.config.objects.FilterRule.FilterMode;
 import org.maboroshi.vessel.config.objects.effects.EffectGroup;
-import org.maboroshi.vessel.config.objects.effects.SoundEffect;
 
 @Configuration
 public class VesselTemplate {
@@ -43,7 +44,7 @@ public class VesselTemplate {
     public EventRegistry events = new EventRegistry();
 
     public static VesselTemplate load(File vesselTemplate) {
-        YamlConfigurationProperties properties = ConfigLib.BUKKIT_DEFAULT_PROPERTIES.toBuilder()
+        YamlConfigurationProperties properties = ConfigLib.PAPER_DEFAULT_PROPERTIES.toBuilder()
                 .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
                 .build();
         return YamlConfigurations.update(vesselTemplate.toPath(), VesselTemplate.class, properties);
@@ -161,7 +162,9 @@ public class VesselTemplate {
                 return new EventSettings(
                         true,
                         new EffectGroup(
-                                Map.of("capture", new SoundEffect("entity.item.pickup", 1f, 1f)),
+                                Map.of(
+                                        "capture",
+                                        Sound.sound(Key.key("entity.item.pickup"), Sound.Source.MASTER, 1f, 1f)),
                                 Collections.emptyMap()),
                         Collections.emptyMap());
             }
@@ -170,7 +173,9 @@ public class VesselTemplate {
                 return new EventSettings(
                         true,
                         new EffectGroup(
-                                Map.of("release", new SoundEffect("entity.item.break", 1f, 1f)),
+                                Map.of(
+                                        "release",
+                                        Sound.sound(Key.key("entity.item.break"), Sound.Source.MASTER, 1f, 1f)),
                                 Collections.emptyMap()),
                         Collections.emptyMap());
             }

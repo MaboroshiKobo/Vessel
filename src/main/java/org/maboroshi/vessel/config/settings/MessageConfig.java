@@ -8,11 +8,13 @@ import de.exlll.configlib.YamlConfigurationProperties;
 import de.exlll.configlib.YamlConfigurations;
 import java.io.File;
 import java.nio.file.Path;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class MessageConfig {
 
     public static MessageConfiguration load(File dataFolder) {
-        YamlConfigurationProperties properties = ConfigLib.BUKKIT_DEFAULT_PROPERTIES.toBuilder()
+        YamlConfigurationProperties properties = ConfigLib.PAPER_DEFAULT_PROPERTIES.toBuilder()
                 .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
                 .build();
         Path messagesFile = new File(dataFolder, "messages.yml").toPath();
@@ -22,7 +24,7 @@ public class MessageConfig {
     @Configuration
     public static class MessageConfiguration {
         @Comment("The global prefix used in messages. Use <prefix> in other messages to include it.")
-        public String prefix = "<color:#F2CDCD><bold>Vessel</bold> ➟</color>";
+        public Component prefix = MiniMessage.miniMessage().deserialize("<color:#F2CDCD><bold>Vessel</bold> ➟</color>");
 
         @Comment("Core gameplay messages for capturing and releasing entities.")
         public GeneralMessages general = new GeneralMessages();
