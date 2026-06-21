@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/MaboroshiKobo/branding/refs/heads/main/projects/vessel/vessel.avif" width="180" alt="Vessel Logo" />
   <h1>Vessel</h1>
-  <p>Easily capture and store any entity in portable items, allowing you to move and release them anywhere.</p>
+  <p>Redefine mob transportation on your server. Safely catch, store, and release any entity using highly customizable pocket items. A free alternative to SafariNet.</p>
 
   <p>
     <img alt="paper" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/paper_vector.svg">
@@ -23,18 +23,24 @@
 
 ### Features
 
-Vessel provides flexible capture-and-release mechanics with a wide range of configuration options:
-
-* Create as many vessel templates as you want with independent behavior, item appearance, and usage restrictions.
-* Material overrides to dynamically change the item type or texture based on the exact entity that was captured.
-* MythicMobs support to capture and release custom entities.
-* Nexo integration to use your own custom item models for your vessel items.
-* Custom effects and actions to trigger sounds, particles, or console commands on use (supports chance, permissions, and random selections).
-* MiniMessage and PlaceholderAPI support for fully stylized and dynamic display text.
+* Create as many different vessel templates as you want. You can give each item its own unique behavior, custom textures, usage restrictions, and specific entity blacklists/whitelists.
+* Set up material overrides so a pocket item's type or appearance instantly transforms depending on the exact mob resting inside it (like showing a chicken spawn egg item when a chicken is caught).
+* Trigger custom actions like vanilla sounds, particle effects, or commands whenever a player catches or releases an entity; complete with chance mechanics and permission checks.
+* Keep your server looking incredibly clean with native MiniMessage styling and full PlaceholderAPI support to display dynamic text.
 
 ### Prerequisites
 
-To use this plugin, your server must be running **Paper** on `26.1` or higher, and Java 25 or higher.
+This plugin is designed and officially tested for **Paper** `26.1`+ using **Java 25**. While it might technically run on slightly older Minecraft or Java versions, those aren't officially supported; so if something breaks, you're on your own!
+
+#### Compatibility
+
+Vessel supports integration with the following plugins to enhance functionality:
+
+* [Nexo](https://www.nexomc.com/) (Custom item models)
+* [MythicMobs](https://mythiccraft.io/) (Supports catching and storing MythicMobs entities)
+* [PlaceholderAPI](https://placeholderapi.com/)
+* [WorldGuard](https://enginehub.org/worldguard/)
+* [Towny](https://www.townyadvanced.com/)
 
 ### Documentation & Support
 
