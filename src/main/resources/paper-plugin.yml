@@ -2,7 +2,7 @@ name: Vessel
 version: "${version}"
 main: org.maboroshi.vessel.Vessel
 loader: org.maboroshi.vessel.Loader
-description: Easily capture and store any entity in portable items, allowing you to move and release them anywhere.
+description: Redefine mob transportation on your server. Safely catch, store, and release any entity using highly customizable pocket items.
 author: Maboroshi
 website: https://github.com/MaboroshiKobo/Vessel
 api-version: "26.1"
