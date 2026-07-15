@@ -1,8 +1,6 @@
-<div align="center">
-  <img src="https://raw.githubusercontent.com/MaboroshiKobo/branding/refs/heads/main/projects/vessel/vessel.avif" width="180" alt="Vessel Logo" />
-  <h1>Vessel</h1>
-  <p>Redefine mob transportation on your server. Safely catch, store, and release any entity using highly customizable pocket items. A free alternative to SafariNet.</p>
+[![Vessel Banner](https://raw.githubusercontent.com/MaboroshiKobo/branding/refs/heads/main/projects/vessel/banners/vessel_2048.png)](https://docs.maboroshi.org/projects/vessel)
 
+<div align="center">
   <p>
     <img alt="paper" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/paper_vector.svg">
     <img alt="purpur" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/purpur_vector.svg">
@@ -16,37 +14,38 @@
   </p>
 
   <p>
-    <a href="https://docs.maboroshi.org"><img alt="generic" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/generic_vector.svg"></a>
-    <a href="https://discord.maboroshi.org"><img alt="discord-singular" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/social/discord-singular_vector.svg"></a>
+    <a href="https://docs.maboroshi.org/projects/vessel"><img alt="generic" height="56" src="https://raw.githubusercontent.com/MaboroshiKobo/branding/refs/heads/main/socials/128x/domain_icon_bg.png"></a>
+    <a href="https://discord.maboroshi.org"><img alt="discord-singular" height="56" src="https://raw.githubusercontent.com/MaboroshiKobo/branding/refs/heads/main/socials/128x/discord_icon_bg.png"></a>
   </p>
 </div>
 
-### Features
+## Custom entity capture and item-based mob transportation
 
-* Create as many different vessel templates as you want. You can give each item its own unique behavior, custom textures, usage restrictions, and specific entity blacklists/whitelists.
-* Set up material overrides so a pocket item's type or appearance instantly transforms depending on the exact mob resting inside it (like showing a chicken spawn egg item when a chicken is caught).
-* Trigger custom actions like vanilla sounds, particle effects, or commands whenever a player catches or releases an entity; complete with chance mechanics and permission checks.
-* Keep your server looking incredibly clean with native MiniMessage styling and full PlaceholderAPI support to display dynamic text.
+Vessel is a utility plugin that lets players capture, store, and transport entities using highly customizable pocket items. It provides administrators complete control over item behaviors, reuse rules, entity restrictions, and world filters to safely manage mob movement on a server.
 
-### Prerequisites
+## Features
 
-This plugin is designed and officially tested for **Paper** `26.1`+ using **Java 25**. While it might technically run on slightly older Minecraft or Java versions, those aren't officially supported; so if something breaks, you're on your own!
+* Create infinite item templates with distinct textures, custom lore, and targeted permission groups.
+* Configure vessels as single-use consumables or infinitely reusable item containers.
+* Apply material overrides to change a vessel's item appearance based on the specific entity caught inside.
+* Restrict captures by world, entity type, spawn reasons, nametagged status, or pet ownership.
+* Trigger customized sound and particle effects instantly during capture and release actions.
 
-#### Compatibility
+## Prerequisites
 
-Vessel supports integration with the following plugins to enhance functionality:
+Vessel is compatible with the following plugins:
 
-* [Nexo](https://www.nexomc.com/) (Custom item models)
-* [MythicMobs](https://mythiccraft.io/) (Supports catching and storing MythicMobs entities)
-* [PlaceholderAPI](https://placeholderapi.com/)
-* [WorldGuard](https://enginehub.org/worldguard/)
-* [Towny](https://www.townyadvanced.com/)
+* [Nexo](https://www.nexomc.com/) (Optional for custom item models)
+* [MythicMobs](https://mythiccraft.io/) (Optional for custom entity captures)
+* [WorldGuard](https://enginehub.org/worldguard/) (Optional for region protection)
+* [Towny](https://www.townyadvanced.com/) (Optional for town protection)
+* [PlaceholderAPI](https://placeholderapi.com/) (Optional)
 
-### Documentation & Support
+## Documentation & Support
 
-For a complete guide on features, commands, and configuration, please visit our [wiki](https://docs.maboroshi.org). If you have questions or need to report a bug, join our [Discord server](https://discord.maboroshi.org).
+For configurations, commands, and permissions, check out our [wiki](https://docs.maboroshi.org/projects/vessel). For bugs, questions, or updates, visit our [Discord server](https://discord.maboroshi.org) or open a [GitHub Issue](https://github.com/MaboroshiKobo/Vessel/issues).
 
-### Statistics
+## Statistics
 
 This plugin utilizes [bStats](https://bstats.org/plugin/bukkit/Vessel/31642) to collect anonymous usage metrics.
 
@@ -54,7 +53,7 @@ This plugin utilizes [bStats](https://bstats.org/plugin/bukkit/Vessel/31642) to 
 
 ## Building
 
-If you wish to build the project from source, ensure you have a Java 25 environment configured.
+To build the project from source, ensure you have a Java 25 environment configured.
 
 ```bash
 ./gradlew build
