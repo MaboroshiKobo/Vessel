@@ -15,8 +15,8 @@ import org.maboroshi.vessel.config.settings.MainConfig;
 import org.maboroshi.vessel.config.settings.MainConfig.MainConfiguration;
 import org.maboroshi.vessel.config.settings.MessageConfig;
 import org.maboroshi.vessel.config.settings.MessageConfig.MessageConfiguration;
-import org.maboroshi.vessel.util.Log;
 import org.maboroshi.vessel.config.settings.VesselTemplate;
+import org.maboroshi.vessel.util.Log;
 
 public class ConfigManager {
     private final File dataFolder;
@@ -76,8 +76,7 @@ public class ConfigManager {
                 String fileName = file.getName();
 
                 if (fileName.contains(" ")) {
-                    Log
-                            .warn("Vessel template '" + fileName + "' contains spaces and was skipped.");
+                    Log.warn("Vessel template '" + fileName + "' contains spaces and was skipped.");
                     continue;
                 }
 

@@ -21,8 +21,7 @@ import org.maboroshi.vessel.manager.VesselManager;
 import org.maboroshi.vessel.protection.ProtectionService;
 import org.maboroshi.vessel.util.Keys;
 import org.maboroshi.vessel.util.Log;
-import org.maboroshi.vessel.util.MessageUtils;
-import org.maboroshi.vessel.util.UpdateChecker;
+import org.maboroshi.vessel.util.Messages;
 
 public final class Vessel extends JavaPlugin {
     private static Vessel plugin;
@@ -33,7 +32,6 @@ public final class Vessel extends JavaPlugin {
     private ActionHandler actionHandler;
     private VesselManager vesselManager;
     private ProtectionService protectionService;
-    private MessageUtils messageUtils;
 
     @Override
     public void onEnable() {
@@ -50,12 +48,13 @@ public final class Vessel extends JavaPlugin {
         try {
             configManager.loadConfig();
             configManager.loadMessages();
-            this.messageUtils = new MessageUtils(this.configManager);
         } catch (Exception e) {
             Log.error("Failed to load configuration: " + e.getMessage());
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+
+        Messages.init(this.configManager);
 
         this.effectHandler = new EffectHandler();
         this.cooldownHandler = new CooldownHandler();
@@ -79,15 +78,12 @@ public final class Vessel extends JavaPlugin {
 
         @SuppressWarnings("unused")
         Metrics metrics = new Metrics(this, 31642);
-
-        new UpdateChecker(this).checkForUpdates(getServer().getConsoleSender());
     }
 
     public boolean reload() {
         try {
             configManager.loadConfig();
             configManager.loadMessages();
-            this.messageUtils = new MessageUtils(this.configManager);
 
             if (cooldownHandler != null) {
                 cooldownHandler.clearCooldowns();
@@ -127,10 +123,6 @@ public final class Vessel extends JavaPlugin {
 
     public VesselManager getVesselManager() {
         return vesselManager;
-    }
-
-    public MessageUtils getMessageUtils() {
-        return messageUtils;
     }
 
     public ActionHandler getActionHandler() {

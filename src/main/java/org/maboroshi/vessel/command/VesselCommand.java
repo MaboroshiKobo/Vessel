@@ -16,8 +16,7 @@ import org.incendo.cloud.context.CommandContext;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.config.ConfigManager;
 import org.maboroshi.vessel.util.Log;
-import org.maboroshi.vessel.util.MessageUtils;
-import org.maboroshi.vessel.util.UpdateChecker;
+import org.maboroshi.vessel.util.Messages;
 
 public class VesselCommand {
 
@@ -47,18 +46,14 @@ public class VesselCommand {
     @Permission("vessel.command.about")
     public void onAbout(CommandSourceStack source) {
         CommandSender sender = source.getSender();
-        MessageUtils messageUtils = plugin.getMessageUtils();
         ConfigManager config = plugin.getConfigManager();
 
-        messageUtils.send(
+        Messages.send(
                 sender,
                 config.getMessageConfig().prefix
                         + "Plugin Version: <gray><version></gray>, Authors: <gray><authors></gray>",
-                messageUtils.tag("version", plugin.getPluginMeta().getVersion()),
-                messageUtils.tag(
-                        "authors", String.join(", ", plugin.getPluginMeta().getAuthors())));
-
-        new UpdateChecker(plugin).checkForUpdates(sender);
+                Messages.tag("version", plugin.getPluginMeta().getVersion()),
+                Messages.tag("authors", String.join(", ", plugin.getPluginMeta().getAuthors())));
     }
 
     @Command("vessel reload")
@@ -66,13 +61,12 @@ public class VesselCommand {
     public void onReload(CommandSourceStack source) {
         CommandSender sender = source.getSender();
         if (plugin.reload()) {
-            plugin.getMessageUtils().send(sender, plugin.getConfigManager().getMessageConfig().commands.reloadSuccess);
+            Messages.send(sender, plugin.getConfigManager().getMessageConfig().commands.reloadSuccess);
         } else {
-            plugin.getMessageUtils()
-                    .send(
-                            sender,
-                            plugin.getConfigManager().getMessageConfig().commands.reloadFail,
-                            plugin.getMessageUtils().tag("error", "Check console for details"));
+            Messages.send(
+                    sender,
+                    plugin.getConfigManager().getMessageConfig().commands.reloadFail,
+                    Messages.tag("error", "Check console for details"));
         }
     }
 
@@ -80,14 +74,13 @@ public class VesselCommand {
     @Permission("vessel.command.help")
     public void help(CommandSourceStack source) {
         CommandSender sender = source.getSender();
-        MessageUtils messageUtils = plugin.getMessageUtils();
         ConfigManager config = plugin.getConfigManager();
 
-        messageUtils.send(sender, config.getMessageConfig().help.header);
-        messageUtils.send(sender, config.getMessageConfig().help.about);
-        messageUtils.send(sender, config.getMessageConfig().help.help);
-        messageUtils.send(sender, config.getMessageConfig().help.give);
-        messageUtils.send(sender, config.getMessageConfig().help.reload);
+        Messages.send(sender, config.getMessageConfig().help.header);
+        Messages.send(sender, config.getMessageConfig().help.about);
+        Messages.send(sender, config.getMessageConfig().help.help);
+        Messages.send(sender, config.getMessageConfig().help.give);
+        Messages.send(sender, config.getMessageConfig().help.reload);
     }
 
     @Command("vessel give <player> <type> <amount>")
@@ -100,21 +93,16 @@ public class VesselCommand {
             @Flag(value = "silent", aliases = "s") boolean isSilent) {
 
         CommandSender sender = source.getSender();
-        MessageUtils messageUtils = plugin.getMessageUtils();
         ConfigManager config = plugin.getConfigManager();
 
         if (amount < 1 || amount > 64) {
-            messageUtils.send(
-                    sender,
-                    config.getMessageConfig().commands.invalidAmount,
-                    messageUtils.tag("min", 1),
-                    messageUtils.tag("max", 64));
+            Messages.send(sender, config.getMessageConfig().commands.invalidAmount, Messages.tag("min", 1), Messages.tag("max", 64));
             return;
         }
 
         ItemStack item = plugin.getVesselManager().createEmptyVessel(type);
         if (item == null) {
-            messageUtils.send(sender, config.getMessageConfig().commands.invalidType);
+            Messages.send(sender, config.getMessageConfig().commands.invalidType);
             return;
         }
 
@@ -126,17 +114,17 @@ public class VesselCommand {
                 .forEach(leftover -> player.getWorld().dropItemNaturally(player.getLocation(), leftover));
 
         if (!isSilent) {
-            messageUtils.send(
+            Messages.send(
                     sender,
                     config.getMessageConfig().commands.giveSender,
-                    messageUtils.tag("target", player.getName()),
-                    messageUtils.tag("amount", amount),
-                    messageUtils.tag("type", type));
-            messageUtils.send(
+                    Messages.tag("target", player.getName()),
+                    Messages.tag("amount", amount),
+                    Messages.tag("type", type));
+            Messages.send(
                     player,
                     config.getMessageConfig().commands.givePlayer,
-                    messageUtils.tag("amount", amount),
-                    messageUtils.tag("type", type));
+                    Messages.tag("amount", amount),
+                    Messages.tag("type", type));
         } else {
             Log.info("Gave " + player.getName() + " " + amount + " " + type + " vessel(s) silently.");
         }

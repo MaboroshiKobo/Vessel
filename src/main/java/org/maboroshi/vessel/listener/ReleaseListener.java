@@ -25,7 +25,7 @@ import org.maboroshi.vessel.config.settings.VesselTemplate;
 import org.maboroshi.vessel.handler.CooldownHandler;
 import org.maboroshi.vessel.util.Keys;
 import org.maboroshi.vessel.util.Log;
-import org.maboroshi.vessel.util.MessageUtils;
+import org.maboroshi.vessel.util.Messages;
 import org.maboroshi.vessel.util.MythicHook;
 import org.maboroshi.vessel.util.VesselUtils;
 
@@ -33,13 +33,11 @@ public class ReleaseListener implements Listener {
     private final Vessel plugin;
     private final ConfigManager config;
     private final CooldownHandler cooldownHandler;
-    private final MessageUtils messageUtils;
 
     public ReleaseListener(Vessel plugin) {
         this.plugin = plugin;
         this.config = plugin.getConfigManager();
         this.cooldownHandler = plugin.getCooldownHandler();
-        this.messageUtils = plugin.getMessageUtils();
     }
 
     @EventHandler
@@ -62,7 +60,7 @@ public class ReleaseListener implements Listener {
         if (template == null) return;
 
         if (!player.hasPermission("vessel.use." + vesselType.toLowerCase(Locale.ROOT))) {
-            messageUtils.send(player, config.getMessageConfig().general.cannotUseVessel);
+            Messages.send(player, config.getMessageConfig().general.cannotUseVessel);
             return;
         }
 
@@ -73,10 +71,10 @@ public class ReleaseListener implements Listener {
 
         FilterRule worlds = template.restrictions.worlds;
         if (!VesselUtils.isAllowed(player.getWorld().getName(), worlds)) {
-            messageUtils.send(
+            Messages.send(
                     player,
                     config.getMessageConfig().general.cannotReleaseWorld,
-                    messageUtils.tag("world", player.getWorld().getName()));
+                    Messages.tag("world", player.getWorld().getName()));
             return;
         }
 
@@ -85,12 +83,12 @@ public class ReleaseListener implements Listener {
 
         Location loc = findSafeReleaseLocation(block, event.getBlockFace());
         if (loc == null) {
-            messageUtils.send(player, "<prefix> <white>There is no safe space to release this vessel.</white>");
+            Messages.send(player, "<prefix> <white>There is no safe space to release this vessel.</white>");
             return;
         }
 
         if (!plugin.getProtectionService().canRelease(player, loc)) {
-            messageUtils.send(player, config.getMessageConfig().general.cannotReleaseHere);
+            Messages.send(player, config.getMessageConfig().general.cannotReleaseHere);
             return;
         }
 
@@ -106,8 +104,7 @@ public class ReleaseListener implements Listener {
         if (!player.hasPermission("vessel.release.*")
                 && !player.hasPermission("vessel.release." + mobId)
                 && !VesselUtils.hasGroupPermission(player, tempMob, "release")) {
-            messageUtils.send(
-                    player, config.getMessageConfig().general.cannotRelease, messageUtils.tag("entity_type", mobId));
+            Messages.send(player, config.getMessageConfig().general.cannotRelease, Messages.tag("entity_type", mobId));
             return;
         }
 
