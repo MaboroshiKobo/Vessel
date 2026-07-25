@@ -32,7 +32,7 @@ public class UpdateChecker {
                         }
                         return response.body();
                     } catch (Exception e) {
-                        plugin.getPluginLogger().warn("Update check failed: " + e.getMessage());
+                        Log.warn("Update check failed: " + e.getMessage());
                         return null;
                     }
                 })
@@ -45,12 +45,10 @@ public class UpdateChecker {
 
                         if (isNewer(currentVersion, tagName)) {
                             if (requester instanceof ConsoleCommandSender) {
-                                plugin.getPluginLogger()
-                                        .warn("A new version is available! (Current: " + currentVersion + " | Latest: "
-                                                + tagName + ")");
-                                plugin.getPluginLogger()
-                                        .warn(
-                                                "Download it at: https://github.com/MaboroshiKobo/Vessel/releases/latest");
+                                Log.warn("A new version is available! (Current: " + currentVersion + " | Latest: "
+                                        + tagName + ")");
+                                Log.warn(
+                                        "Download it at: https://github.com/MaboroshiKobo/Vessel/releases/latest");
                             } else {
                                 MessageUtils messageUtils = plugin.getMessageUtils();
                                 messageUtils.send(

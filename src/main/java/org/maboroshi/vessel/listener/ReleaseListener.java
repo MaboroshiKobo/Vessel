@@ -24,7 +24,7 @@ import org.maboroshi.vessel.config.objects.FilterRule;
 import org.maboroshi.vessel.config.settings.VesselTemplate;
 import org.maboroshi.vessel.handler.CooldownHandler;
 import org.maboroshi.vessel.util.Keys;
-import org.maboroshi.vessel.util.Logger;
+import org.maboroshi.vessel.util.Log;
 import org.maboroshi.vessel.util.MessageUtils;
 import org.maboroshi.vessel.util.MythicHook;
 import org.maboroshi.vessel.util.VesselUtils;
@@ -32,14 +32,12 @@ import org.maboroshi.vessel.util.VesselUtils;
 public class ReleaseListener implements Listener {
     private final Vessel plugin;
     private final ConfigManager config;
-    private final Logger log;
     private final CooldownHandler cooldownHandler;
     private final MessageUtils messageUtils;
 
     public ReleaseListener(Vessel plugin) {
         this.plugin = plugin;
         this.config = plugin.getConfigManager();
-        this.log = plugin.getPluginLogger();
         this.cooldownHandler = plugin.getCooldownHandler();
         this.messageUtils = plugin.getMessageUtils();
     }
@@ -97,7 +95,7 @@ public class ReleaseListener implements Listener {
         }
 
         if (cooldownHandler.isOnCooldown(player.getUniqueId(), config.getMainConfig().cooldown)) {
-            log.debug("Player " + player.getName() + " attempted to release a vessel but is on cooldown.");
+            Log.debug("Player " + player.getName() + " attempted to release a vessel but is on cooldown.");
             return;
         }
 
@@ -136,7 +134,7 @@ public class ReleaseListener implements Listener {
                             .set(Keys.SPAWN_REASON, PersistentDataType.STRING, savedReason.toUpperCase(Locale.ROOT));
                 }
             } catch (Exception e) {
-                log.error("Failed to spawn MythicMob type '" + mythicId + "', falling back to vanilla snapshot.");
+                Log.error("Failed to spawn MythicMob type '" + mythicId + "', falling back to vanilla snapshot.");
                 releasedMob = spawnVanillaSnapshot(snapshot, loc, savedReason);
             }
         } else {
@@ -144,7 +142,7 @@ public class ReleaseListener implements Listener {
         }
 
         if (releasedMob == null) {
-            log.error("Failed to spawn entity from snapshot during release.");
+            Log.error("Failed to spawn entity from snapshot during release.");
             return;
         }
 
@@ -191,7 +189,7 @@ public class ReleaseListener implements Listener {
         try {
             return CreatureSpawnEvent.SpawnReason.valueOf(savedReason.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
-            log.debug("Unknown stored spawn reason '" + savedReason + "', falling back to CUSTOM.");
+            Log.debug("Unknown stored spawn reason '" + savedReason + "', falling back to CUSTOM.");
             return CreatureSpawnEvent.SpawnReason.CUSTOM;
         }
     }

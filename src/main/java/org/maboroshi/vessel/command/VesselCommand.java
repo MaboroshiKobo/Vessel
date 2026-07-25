@@ -15,7 +15,7 @@ import org.incendo.cloud.annotations.suggestion.Suggestions;
 import org.incendo.cloud.context.CommandContext;
 import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.config.ConfigManager;
-import org.maboroshi.vessel.util.Logger;
+import org.maboroshi.vessel.util.Log;
 import org.maboroshi.vessel.util.MessageUtils;
 import org.maboroshi.vessel.util.UpdateChecker;
 
@@ -102,7 +102,6 @@ public class VesselCommand {
         CommandSender sender = source.getSender();
         MessageUtils messageUtils = plugin.getMessageUtils();
         ConfigManager config = plugin.getConfigManager();
-        Logger log = plugin.getPluginLogger();
 
         if (amount < 1 || amount > 64) {
             messageUtils.send(
@@ -139,7 +138,7 @@ public class VesselCommand {
                     messageUtils.tag("amount", amount),
                     messageUtils.tag("type", type));
         } else {
-            log.info("Gave " + player.getName() + " " + amount + " " + type + " vessel(s) silently.");
+            Log.info("Gave " + player.getName() + " " + amount + " " + type + " vessel(s) silently.");
         }
     }
 }

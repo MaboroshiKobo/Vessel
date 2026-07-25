@@ -26,14 +26,13 @@ import org.maboroshi.vessel.config.objects.FilterRule;
 import org.maboroshi.vessel.config.settings.VesselTemplate;
 import org.maboroshi.vessel.config.settings.VesselTemplate.ExclusionSettings;
 import org.maboroshi.vessel.util.Keys;
-import org.maboroshi.vessel.util.Logger;
+import org.maboroshi.vessel.util.Log;
 import org.maboroshi.vessel.util.MessageUtils;
 import org.maboroshi.vessel.util.MythicHook;
 import org.maboroshi.vessel.util.VesselUtils;
 
 public class CaptureListener implements Listener {
     private final Vessel plugin;
-    private final Logger log;
     private final MessageUtils messageUtils;
     private final ConfigManager config;
 
@@ -41,7 +40,6 @@ public class CaptureListener implements Listener {
 
     public CaptureListener(Vessel plugin) {
         this.plugin = plugin;
-        this.log = plugin.getPluginLogger();
         this.messageUtils = plugin.getMessageUtils();
         this.config = plugin.getConfigManager();
     }
@@ -108,7 +106,7 @@ public class CaptureListener implements Listener {
                         messageUtils.tag("entity_type", mobId),
                         messageUtils.tag("spawn_reason", reason),
                         messageUtils.tagParsed("entity_name", safeMobName));
-                log.debug("Player " + player.getName() + " tried to capture entity spawned by reason " + reason + ".");
+                Log.debug("Player " + player.getName() + " tried to capture entity spawned by reason " + reason + ".");
                 return;
             }
         }
@@ -141,7 +139,7 @@ public class CaptureListener implements Listener {
         FilterRule mobs = restrictions.entities;
 
         if (!VesselUtils.isAllowed(mobId, mobs)) {
-            log.debug("Player " + player.getName() + " tried to capture a disallowed entity.");
+            Log.debug("Player " + player.getName() + " tried to capture a disallowed entity.");
             messageUtils.send(
                     player,
                     config.getMessageConfig().general.blacklistedEntity,
@@ -194,7 +192,7 @@ public class CaptureListener implements Listener {
         }
 
         if (snapshot == null) {
-            log.debug("Failed to create an EntitySnapshot for entity type: " + clickedMob.getType());
+            Log.debug("Failed to create an EntitySnapshot for entity type: " + clickedMob.getType());
             return;
         }
 
