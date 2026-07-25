@@ -30,17 +30,6 @@ public class VesselUtils {
             return pdc.get(Keys.VESSEL_TEMPLATE, PersistentDataType.STRING);
         }
 
-        if (pdc.has(Keys.VESSEL_TYPE, PersistentDataType.STRING)) {
-            String templateId = pdc.get(Keys.VESSEL_TYPE, PersistentDataType.STRING);
-
-            pdc.remove(Keys.VESSEL_TYPE);
-            pdc.set(Keys.VESSEL_TEMPLATE, PersistentDataType.STRING, templateId);
-
-            item.setItemMeta(meta);
-
-            return templateId;
-        }
-
         return null;
     }
 
