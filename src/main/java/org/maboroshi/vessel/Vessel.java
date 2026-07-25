@@ -41,6 +41,12 @@ public final class Vessel extends JavaPlugin {
         Keys.init(this);
         this.configManager = new ConfigManager(getDataFolder());
 
+        Log.init(
+                getComponentLogger(),
+                () -> configManager != null
+                        && configManager.getMainConfig() != null
+                        && configManager.getMainConfig().debug);
+
         try {
             configManager.loadConfig();
             configManager.loadMessages();
