@@ -40,6 +40,7 @@ Vessel is compatible with the following plugins:
 * [WorldGuard](https://enginehub.org/worldguard/) (Optional for region protection)
 * [Towny](https://www.townyadvanced.com/) (Optional for town protection)
 * [PlaceholderAPI](https://placeholderapi.com/) (Optional)
+* [PluginUpdater](https://modrinth.com/plugin/plugin-updater) (Optional for update checking and automatic updates)
 
 ## Documentation & Support
 
