@@ -11,16 +11,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import org.maboroshi.vessel.Vessel;
 import org.maboroshi.vessel.config.settings.MainConfig;
 import org.maboroshi.vessel.config.settings.MainConfig.MainConfiguration;
 import org.maboroshi.vessel.config.settings.MessageConfig;
 import org.maboroshi.vessel.config.settings.MessageConfig.MessageConfiguration;
 import org.maboroshi.vessel.config.settings.VesselTemplate;
+import org.maboroshi.vessel.util.Log;
 
 public class ConfigManager {
     private final File dataFolder;
-    private final Vessel plugin;
 
     private MainConfiguration mainConfig;
     private MessageConfiguration messageConfig;
@@ -30,9 +29,8 @@ public class ConfigManager {
             .setNameFormatter(NameFormatters.LOWER_KEBAB_CASE)
             .build();
 
-    public ConfigManager(Vessel plugin, File dataFolder) {
+    public ConfigManager(File dataFolder) {
         this.dataFolder = dataFolder;
-        this.plugin = plugin;
         this.vesselTemplates = new HashMap<>();
     }
 
@@ -78,8 +76,7 @@ public class ConfigManager {
                 String fileName = file.getName();
 
                 if (fileName.contains(" ")) {
-                    plugin.getPluginLogger()
-                            .warn("Vessel template '" + fileName + "' contains spaces and was skipped.");
+                    Log.warn("Vessel template '" + fileName + "' contains spaces and was skipped.");
                     continue;
                 }
 

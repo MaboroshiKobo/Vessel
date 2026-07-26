@@ -1,12 +1,15 @@
 name: Vessel
-version: "${version}"
+version: ${version}
 main: org.maboroshi.vessel.Vessel
 loader: org.maboroshi.vessel.Loader
 description: Redefine mob transportation on your server. Safely catch, store, and release any entity using highly customizable pocket items.
 author: Maboroshi
 website: https://github.com/MaboroshiKobo/Vessel
-api-version: "26.1"
+api-version: 26.1
 folia-supported: true
+modrinth-project-id: vessel
+hangar-project-slug: vessel
+github-repo: MaboroshiKobo/Vessel
 dependencies:
   server:
     PlaceholderAPI:

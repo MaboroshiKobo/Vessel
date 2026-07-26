@@ -26,23 +26,19 @@ import org.maboroshi.vessel.config.objects.FilterRule;
 import org.maboroshi.vessel.config.settings.VesselTemplate;
 import org.maboroshi.vessel.config.settings.VesselTemplate.ExclusionSettings;
 import org.maboroshi.vessel.util.Keys;
-import org.maboroshi.vessel.util.Logger;
-import org.maboroshi.vessel.util.MessageUtils;
+import org.maboroshi.vessel.util.Log;
+import org.maboroshi.vessel.util.Messages;
 import org.maboroshi.vessel.util.MythicHook;
 import org.maboroshi.vessel.util.VesselUtils;
 
 public class CaptureListener implements Listener {
     private final Vessel plugin;
-    private final Logger log;
-    private final MessageUtils messageUtils;
     private final ConfigManager config;
 
     private static final MiniMessage mm = MiniMessage.miniMessage();
 
     public CaptureListener(Vessel plugin) {
         this.plugin = plugin;
-        this.log = plugin.getPluginLogger();
-        this.messageUtils = plugin.getMessageUtils();
         this.config = plugin.getConfigManager();
     }
 
@@ -70,7 +66,7 @@ public class CaptureListener implements Listener {
         if (template == null) return;
 
         if (!player.hasPermission("vessel.use." + vesselType.toLowerCase(Locale.ROOT))) {
-            messageUtils.send(player, config.getMessageConfig().general.cannotUseVessel);
+            Messages.send(player, config.getMessageConfig().general.cannotUseVessel);
             return;
         }
 
@@ -78,17 +74,17 @@ public class CaptureListener implements Listener {
 
         FilterRule worlds = restrictions.worlds;
         if (!VesselUtils.isAllowed(player.getWorld().getName(), worlds)) {
-            messageUtils.send(
+            Messages.send(
                     player,
                     config.getMessageConfig().general.cannotCaptureWorld,
-                    messageUtils.tag("world", player.getWorld().getName()));
+                    Messages.tag("world", player.getWorld().getName()));
             return;
         }
 
         Location loc = clickedMob.getLocation();
 
         if (!plugin.getProtectionService().canCapture(player, loc)) {
-            messageUtils.send(player, config.getMessageConfig().general.cannotCaptureHere);
+            Messages.send(player, config.getMessageConfig().general.cannotCaptureHere);
             return;
         }
 
@@ -102,13 +98,13 @@ public class CaptureListener implements Listener {
         if (clickedMob.getPersistentDataContainer().has(Keys.SPAWN_REASON, PersistentDataType.STRING)) {
             String reason = clickedMob.getPersistentDataContainer().get(Keys.SPAWN_REASON, PersistentDataType.STRING);
             if (!VesselUtils.isAllowed(reason, rules.spawnReasons)) {
-                messageUtils.send(
+                Messages.send(
                         player,
                         config.getMessageConfig().general.blacklistedEntity,
-                        messageUtils.tag("entity_type", mobId),
-                        messageUtils.tag("spawn_reason", reason),
-                        messageUtils.tagParsed("entity_name", safeMobName));
-                log.debug("Player " + player.getName() + " tried to capture entity spawned by reason " + reason + ".");
+                        Messages.tag("entity_type", mobId),
+                        Messages.tag("spawn_reason", reason),
+                        Messages.tagParsed("entity_name", safeMobName));
+                Log.debug("Player " + player.getName() + " tried to capture entity spawned by reason " + reason + ".");
                 return;
             }
         }
@@ -118,12 +114,12 @@ public class CaptureListener implements Listener {
             if (owner != null) {
                 if (owner.equals(player.getUniqueId())) {
                     if (rules.tamed) {
-                        messageUtils.send(player, config.getMessageConfig().general.cannotCaptureTamed);
+                        Messages.send(player, config.getMessageConfig().general.cannotCaptureTamed);
                         return;
                     }
                 } else {
                     if (rules.othersTamed) {
-                        messageUtils.send(player, config.getMessageConfig().general.cannotCaptureOthersTamed);
+                        Messages.send(player, config.getMessageConfig().general.cannotCaptureOthersTamed);
                         return;
                     }
                 }
@@ -131,30 +127,26 @@ public class CaptureListener implements Listener {
         }
 
         if (rules.named && clickedMob.customName() != null) {
-            messageUtils.send(
-                    player,
-                    config.getMessageConfig().general.cannotCaptureNamed,
-                    messageUtils.tag("entity_type", mobId));
+            Messages.send(player, config.getMessageConfig().general.cannotCaptureNamed, Messages.tag("entity_type", mobId));
             return;
         }
 
         FilterRule mobs = restrictions.entities;
 
         if (!VesselUtils.isAllowed(mobId, mobs)) {
-            log.debug("Player " + player.getName() + " tried to capture a disallowed entity.");
-            messageUtils.send(
+            Log.debug("Player " + player.getName() + " tried to capture a disallowed entity.");
+            Messages.send(
                     player,
                     config.getMessageConfig().general.blacklistedEntity,
-                    messageUtils.tag("entity_type", mobId),
-                    messageUtils.tagParsed("entity_name", safeMobName));
+                    Messages.tag("entity_type", mobId),
+                    Messages.tagParsed("entity_name", safeMobName));
             return;
         }
 
         if (!player.hasPermission("vessel.capture.*")
                 && !player.hasPermission("vessel.capture." + mobId)
                 && !VesselUtils.hasGroupPermission(player, clickedMob, "capture")) {
-            messageUtils.send(
-                    player, config.getMessageConfig().general.cannotCapture, messageUtils.tag("entity_type", mobId));
+            Messages.send(player, config.getMessageConfig().general.cannotCapture, Messages.tag("entity_type", mobId));
             return;
         }
 
@@ -194,7 +186,7 @@ public class CaptureListener implements Listener {
         }
 
         if (snapshot == null) {
-            log.debug("Failed to create an EntitySnapshot for entity type: " + clickedMob.getType());
+            Log.debug("Failed to create an EntitySnapshot for entity type: " + clickedMob.getType());
             return;
         }
 

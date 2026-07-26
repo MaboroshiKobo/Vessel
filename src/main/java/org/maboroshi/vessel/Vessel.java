@@ -20,40 +20,43 @@ import org.maboroshi.vessel.listener.SpawnReasonListener;
 import org.maboroshi.vessel.manager.VesselManager;
 import org.maboroshi.vessel.protection.ProtectionService;
 import org.maboroshi.vessel.util.Keys;
-import org.maboroshi.vessel.util.Logger;
-import org.maboroshi.vessel.util.MessageUtils;
-import org.maboroshi.vessel.util.UpdateChecker;
+import org.maboroshi.vessel.util.Log;
+import org.maboroshi.vessel.util.Messages;
 
 public final class Vessel extends JavaPlugin {
     private static Vessel plugin;
 
     private ConfigManager configManager;
-    private Logger log;
     private EffectHandler effectHandler;
     private CooldownHandler cooldownHandler;
     private ActionHandler actionHandler;
     private VesselManager vesselManager;
     private ProtectionService protectionService;
-    private MessageUtils messageUtils;
 
     @Override
     public void onEnable() {
         plugin = this;
         Keys.init(this);
-        this.configManager = new ConfigManager(this, getDataFolder());
+        this.configManager = new ConfigManager(getDataFolder());
+
+        Log.init(
+                getComponentLogger(),
+                () -> configManager != null
+                        && configManager.getMainConfig() != null
+                        && configManager.getMainConfig().debug);
 
         try {
             configManager.loadConfig();
             configManager.loadMessages();
-            this.messageUtils = new MessageUtils(this.configManager);
         } catch (Exception e) {
-            getLogger().severe("Failed to load configuration: " + e.getMessage());
+            Log.error("Failed to load configuration: " + e.getMessage());
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
-        this.log = new Logger(this, messageUtils);
-        this.effectHandler = new EffectHandler(log);
+        Messages.init(this.configManager);
+
+        this.effectHandler = new EffectHandler();
         this.cooldownHandler = new CooldownHandler();
         this.actionHandler = new ActionHandler(this);
         this.vesselManager = new VesselManager(this);
@@ -75,15 +78,12 @@ public final class Vessel extends JavaPlugin {
 
         @SuppressWarnings("unused")
         Metrics metrics = new Metrics(this, 31642);
-
-        new UpdateChecker(this).checkForUpdates(getServer().getConsoleSender());
     }
 
     public boolean reload() {
         try {
             configManager.loadConfig();
             configManager.loadMessages();
-            this.messageUtils = new MessageUtils(this.configManager);
 
             if (cooldownHandler != null) {
                 cooldownHandler.clearCooldowns();
@@ -97,7 +97,7 @@ public final class Vessel extends JavaPlugin {
 
             return true;
         } catch (Exception e) {
-            log.error("Failed to reload Vessel configuration: " + e.getMessage());
+            Log.error("Failed to reload Vessel configuration: " + e.getMessage());
             return false;
         }
     }
@@ -113,10 +113,6 @@ public final class Vessel extends JavaPlugin {
         return configManager;
     }
 
-    public Logger getPluginLogger() {
-        return log;
-    }
-
     public EffectHandler getEffectHandler() {
         return effectHandler;
     }
@@ -127,10 +123,6 @@ public final class Vessel extends JavaPlugin {
 
     public VesselManager getVesselManager() {
         return vesselManager;
-    }
-
-    public MessageUtils getMessageUtils() {
-        return messageUtils;
     }
 
     public ActionHandler getActionHandler() {
