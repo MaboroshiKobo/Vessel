@@ -45,7 +45,7 @@ dependencies {
     compileOnly("me.clip:placeholderapi:2.12.3")
     compileOnly("com.nexomc:nexo:1.26.0")
     compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.0.17")
-    compileOnly("com.palmergames.bukkit.towny:towny:0.103.0.7")
+    compileOnly("com.palmergames.bukkit.towny:towny:0.103.1.1")
     compileOnly("io.lumine:Mythic-Dist:5.13.0")
 }
 
