@@ -43,14 +43,20 @@ All notable changes to this fork are documented here. Format loosely follows
 - `Vessel.onDisable()` was a no-op; the static plugin instance is now cleared so a PlugMan-style
   unload/reload doesn't leak the previous classloader.
 
-### Known limitations discovered this session
+### Notes on Folia/Lophinya + GriefPrevention (confirmed live this session, see `TESTING.md`)
 
-- GriefPrevention 16.18.2 does not run on Folia (confirmed by actually starting it on a Folia fork —
-  see `TESTING.md`): rejected at load unless the fork's Folia-support check is disabled, and then
-  crashes on `onEnable()` because it calls the legacy `Bukkit.getScheduler().scheduleSyncRepeatingTask`
-  API, which Folia's threading model doesn't support. Vessel handles the resulting "installed but
-  disabled" state the same as "not installed," but the GriefPrevention integration is inert on Folia
-  as a result — that's a GriefPrevention limitation, not something fixed here.
+- Plain GriefPrevention does not run on a stock/vanilla Folia build (no `folia-supported` declaration,
+  calls the legacy `Bukkit.getScheduler().scheduleSyncRepeatingTask` API, which Folia's threading
+  model rejects). Vessel handles that gracefully — a crashed-and-disabled GriefPrevention is treated
+  the same as "not installed."
+- On **Lophinya** (Lycohinya's own Folia fork) specifically, GriefPrevention 16.18.7 works correctly
+  via Lophinya's own compat patches (`LophinyaFoliaSupportedGate` +
+  `LophinyaPluginSchedulerDispatch`, a version-locked scheduler-redispatch shim), launched with
+  `-Dlophinya.compat.pluginSchedulerDispatch=true`. Confirmed by actually starting it: GriefPrevention
+  16.18.7 boots cleanly and Vessel enables right after with zero errors. An initial test against an
+  unpatched Luminol build and the wrong GriefPrevention version (16.18.2) reached the wrong
+  conclusion — corrected once retested against Lophinya's actual patched build and the actual
+  deployed GriefPrevention version.
 
 ## [2.1.1] and earlier
 

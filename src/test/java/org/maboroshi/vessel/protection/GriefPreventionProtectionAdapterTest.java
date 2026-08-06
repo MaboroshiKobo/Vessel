@@ -9,8 +9,10 @@ import org.maboroshi.vessel.protection.GriefPreventionProtectionAdapter.ClaimAct
 /**
  * Covers the config-string-to-{@link ClaimPermission} mapping in isolation. This is the part most
  * at risk of silently breaking on a GriefPrevention version bump: the pinned 16.18.2-SNAPSHOT jar
- * still names the container-access tier "Inventory" (verified via javap against the actual cached
- * dependency), while upstream 18.0.0+ renamed it to "Container" and deprecated "Inventory".
+ * (the newest version actually published to Maven) only has "Inventory," not "Container" — confirmed
+ * present in both that jar and 16.18.7 (the newer, non-Maven build Lycohinya's real server runs,
+ * verified directly via javap against that deployed jar), so "Inventory" is deliberately what this
+ * maps to, not a stale leftover.
  */
 class GriefPreventionProtectionAdapterTest {
     @Test

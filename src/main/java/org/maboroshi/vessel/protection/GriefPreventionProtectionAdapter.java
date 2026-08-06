@@ -11,20 +11,30 @@ import org.bukkit.entity.Player;
 import org.maboroshi.vessel.util.Log;
 
 /**
- * GriefPrevention integration, verified against the exact jar Lycohinya deploys
- * (com.griefprevention:GriefPrevention:16.18.2-SNAPSHOT via javap on the cached dependency, cross-
- * checked against upstream source at github.com/GriefPrevention/GriefPrevention).
+ * GriefPrevention integration for Lycohinya's server stack.
+ *
+ * <p>Vessel compiles against {@code com.griefprevention:GriefPrevention:16.18.2-SNAPSHOT} (the
+ * newest version actually published to CodeMC's Maven repo as of this writing — verified via its
+ * {@code maven-metadata.xml}, which jumps straight from 16.18.2-SNAPSHOT to 16.19-SNAPSHOT with
+ * nothing in between). Lycohinya's real server runs a newer, non-Maven-published build,
+ * **GriefPrevention 16.18.7**, obtained outside the Maven repo. Both were verified directly via
+ * {@code javap} against their actual jars (16.18.2-SNAPSHOT from the Gradle dependency cache;
+ * 16.18.7 from Lycohinya's own deployed plugin jar).
  *
  * <p>{@code Claim#checkPermission(Player, ClaimPermission, Event)} already composes owner, explicit
  * trust, public trust, subdivision-inherits-parent-trust, Admin Claim, and {@code ignoreclaims}-mode
  * bypass — this adapter does not re-implement any of that, it only maps Vessel's config-facing
  * {@link ClaimAction} onto GriefPrevention's {@link ClaimPermission} and surfaces its denial reason.
  *
- * <p><b>Version-drift trap:</b> this pinned version's {@code ClaimPermission} enum still calls the
- * container-access tier {@code Inventory}. Upstream (18.0.0+) renamed it to {@code Container} and
- * deprecated {@code Inventory}. If the pinned GriefPrevention dependency is ever bumped to 18.0.0+,
- * update {@link #toClaimPermission} — do not assume the enum constant name is stable across GP
- * versions the way {@code ClaimAction} (Vessel's own config-facing name) is meant to be.
+ * <p><b>Version-drift trap, confirmed by direct comparison of both jars:</b> 16.18.2-SNAPSHOT's
+ * {@code ClaimPermission} enum has {@code Inventory} but no {@code Container}. 16.18.7 has
+ * <em>both</em> — {@code Container} was introduced sometime between those two releases (not at
+ * 18.0.0 as changelogs elsewhere might suggest; that's just the next version tracked upstream on
+ * GitHub, not necessarily where the rename actually shipped). Since Vessel can only compile against
+ * 16.18.2-SNAPSHOT, it deliberately maps to {@code Inventory} — the one name guaranteed to exist in
+ * both the version this compiles against and the version Lycohinya actually runs. If the Maven
+ * dependency is ever bumped to a version where {@code Inventory} is removed (not just deprecated),
+ * switch {@link #toClaimPermission} to {@code Container} and update this comment.
  */
 public final class GriefPreventionProtectionAdapter implements ProtectionAdapter {
     // Package-private (not private) so its config-string parsing and GP-enum mapping can be

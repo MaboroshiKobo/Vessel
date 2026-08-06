@@ -23,6 +23,13 @@
 
 Vessel is a utility plugin that lets players capture, store, and transport entities using highly customizable pocket items. It provides administrators complete control over item behaviors, reuse rules, entity restrictions, and world filters to safely manage mob movement on a server.
 
+> **About this fork.** This repository (`Vessel-Lycohinya`) is a fork of upstream Vessel maintained
+> specifically for the Lycohinya server's own infrastructure — GriefPrevention version pinning,
+> Folia/Lophinya compatibility notes, and the storage/migration work in this README are all written
+> against Lycohinya's actual deployed stack, not general-purpose guarantees for every server. If
+> you're not running Lycohinya's server, the general Vessel feature set below still applies, but
+> version-specific claims (GriefPrevention 16.18.7, Lophinya's compat shims, etc.) may not.
+
 ## Features
 
 * Create infinite item templates with distinct textures, custom lore, and targeted permission groups.
@@ -90,13 +97,26 @@ reimplemented. When GriefPrevention denies an action, its specific denial reason
 player alongside Vessel's own message. GriefPrevention is a soft dependency: Vessel starts up
 normally without it, and this integration does not affect WorldGuard/Towny support.
 
-⚠ **GriefPrevention 16.18.2 does not run on Folia** — confirmed by actually starting it on a Folia
-fork: it's rejected at load ("not marked as supporting Folia") unless that check is disabled, and
-even then it crashes on `onEnable()` (`UnsupportedOperationException`: it calls the legacy
-`Bukkit.getScheduler().scheduleSyncRepeatingTask`, which Folia's threading model rejects outright).
-Vessel handles this gracefully — a crashed-and-disabled GriefPrevention is treated the same as
-GriefPrevention being absent — but this is a real gap in what GriefPrevention itself currently
-supports, not something `GriefPreventionProtectionAdapter` can work around. See `TESTING.md`.
+**GriefPrevention on Lophinya (Lycohinya's Folia fork): works, but needs Lophinya's compat shim.**
+Plain GriefPrevention 16.18.7 (what Lycohinya's server actually runs) does not declare
+`folia-supported` and internally calls the legacy `Bukkit.getScheduler().scheduleSyncRepeatingTask`
+API, which a stock Folia build rejects outright (confirmed by actually hitting this on an unpatched
+Folia/Luminol build: `UnsupportedOperationException`, plugin disables itself). Lophinya specifically
+ships two compatibility patches for exactly this: one that opens the `folia-supported` load gate for
+any Paper plugin, and one (`LophinyaPluginSchedulerDispatch`) that redispatches GriefPrevention's
+specific sync-scheduler tasks to the correct scheduler by a SHA-256-keyed rule table matched to the
+**exact 16.18.7 jar** — not a general "make any plugin Folia-safe" shim. This was confirmed live this
+session: GriefPrevention 16.18.7 loads and enables cleanly on Lophinya with
+`-Dlophinya.compat.pluginSchedulerDispatch=true` set, and Vessel enables right after with zero
+errors. Region-ownership checks (`TickThread.ensureTickThread`) still apply to everything else
+GriefPrevention does — the shim only covers the specific scheduler calls in its rule table.
+Practical implications for anyone running this fork:
+* A generic/vanilla Folia build (no Lophinya patches) will **not** run GriefPrevention 16.18.x at
+  all — Vessel handles that gracefully (a crashed-and-disabled GriefPrevention is treated the same
+  as it being absent), but the integration is simply inert there.
+* On Lophinya, the JVM flag above must be set, and the GriefPrevention jar must match the version the
+  rule table is keyed to (16.18.7 as of this writing) — a different GriefPrevention build reintroduces
+  the crash even on Lophinya. See `TESTING.md` for the full live-verification writeup.
 
 ## Folia support
 
@@ -132,18 +152,24 @@ permissions plugin.
 * Data larger than the safe PDC string threshold cannot be captured at all (the player is told why).
   No entity type is hardcoded as excluded for this reason; it depends on how much state that specific
   entity instance is carrying (trades, passengers, custom NBT, etc.).
-* GriefPrevention integration is verified against the specific server version pinned in `build.gradle`
-  (currently 16.18.2-SNAPSHOT). GriefPrevention's `ClaimPermission` enum has since been renamed
-  upstream (`Inventory` → `Container` in 18.0.0+); bumping the dependency requires re-checking that
-  mapping in `GriefPreventionProtectionAdapter`.
-* GriefPrevention 16.18.2 does not run on Folia at all (confirmed live — see above and `TESTING.md`),
-  so the GriefPrevention integration is inert on a real Folia/Lophinya deployment today; that's a
-  GriefPrevention limitation, not Vessel's.
-* Live client-driven capture/release on a Folia/Lophinya server was not completed this session —
-  blocked by bot-tooling instability on the specific experimental fork tested, not by Vessel's code.
-  Folia's clean plugin load/enable and the code-level thread-safety audit are verified; a full
-  interactive pass still needs a real Minecraft client. See `TESTING.md` for exactly what was and
-  wasn't run.
+* Vessel compiles against `com.griefprevention:GriefPrevention:16.18.2-SNAPSHOT` (the newest version
+  actually published to Maven) but Lycohinya's real server runs a newer, non-Maven-published
+  **16.18.7**. Both were checked directly via `javap`: 16.18.2-SNAPSHOT's `ClaimPermission` enum has
+  `Inventory` but not `Container`; 16.18.7 has both. `GriefPreventionProtectionAdapter` deliberately
+  maps to `Inventory` — the one name confirmed present in both. If a future Maven-published version
+  drops `Inventory` entirely, that mapping needs to move to `Container` (and re-verify against
+  whatever GriefPrevention version Lycohinya is running by then).
+* On a plain/vanilla Folia build without Lophinya's compat patches, GriefPrevention 16.18.x does not
+  run at all — Vessel handles that gracefully (treated the same as GriefPrevention being absent), but
+  the integration is inert there. On Lophinya specifically (with its compat shim and the
+  `-Dlophinya.compat.pluginSchedulerDispatch=true` flag), GriefPrevention 16.18.7 does run — confirmed
+  live this session, see `TESTING.md`.
+* Live client-driven capture/release specifically on Folia/Lophinya was not completed this session —
+  blocked by mineflayer bot-tooling instability on the experimental Folia builds tested (disconnects
+  during normal play, unrelated to Vessel's code or to the GriefPrevention compat question, which was
+  separately confirmed via server logs). Folia/Lophinya's clean plugin load/enable (with GriefPrevention
+  actually working) and the code-level thread-safety audit are verified; a full interactive
+  capture/release pass on Folia specifically still needs a real Minecraft client. See `TESTING.md`.
 
 ## Documentation & Support
 
