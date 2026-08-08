@@ -11,15 +11,14 @@ import org.bukkit.entity.Player;
 import org.maboroshi.vessel.util.Log;
 
 /**
- * GriefPrevention integration for Lycohinya's server stack.
+ * GriefPrevention integration: gates capture/release on a configurable claim permission and
+ * delegates the actual trust/ownership decision to GriefPrevention itself.
  *
  * <p>Vessel compiles against {@code com.griefprevention:GriefPrevention:16.18.2-SNAPSHOT} (the
  * newest version actually published to CodeMC's Maven repo as of this writing — verified via its
  * {@code maven-metadata.xml}, which jumps straight from 16.18.2-SNAPSHOT to 16.19-SNAPSHOT with
- * nothing in between). Lycohinya's real server runs a newer, non-Maven-published build,
- * **GriefPrevention 16.18.7**, obtained outside the Maven repo. Both were verified directly via
- * {@code javap} against their actual jars (16.18.2-SNAPSHOT from the Gradle dependency cache;
- * 16.18.7 from Lycohinya's own deployed plugin jar).
+ * nothing in between). A newer, non-Maven-published build, GriefPrevention 16.18.7, was also checked
+ * directly via {@code javap} against its actual jar.
  *
  * <p>{@code Claim#checkPermission(Player, ClaimPermission, Event)} already composes owner, explicit
  * trust, public trust, subdivision-inherits-parent-trust, Admin Claim, and {@code ignoreclaims}-mode
@@ -31,10 +30,10 @@ import org.maboroshi.vessel.util.Log;
  * <em>both</em> — {@code Container} was introduced sometime between those two releases (not at
  * 18.0.0 as changelogs elsewhere might suggest; that's just the next version tracked upstream on
  * GitHub, not necessarily where the rename actually shipped). Since Vessel can only compile against
- * 16.18.2-SNAPSHOT, it deliberately maps to {@code Inventory} — the one name guaranteed to exist in
- * both the version this compiles against and the version Lycohinya actually runs. If the Maven
- * dependency is ever bumped to a version where {@code Inventory} is removed (not just deprecated),
- * switch {@link #toClaimPermission} to {@code Container} and update this comment.
+ * 16.18.2-SNAPSHOT, it deliberately maps to {@code Inventory} — the one name confirmed to exist in
+ * both versions checked. If the Maven dependency is ever bumped to a version where {@code Inventory}
+ * is removed (not just deprecated), switch {@link #toClaimPermission} to {@code Container} and update
+ * this comment.
  */
 public final class GriefPreventionProtectionAdapter implements ProtectionAdapter {
     // Package-private (not private) so its config-string parsing and GP-enum mapping can be

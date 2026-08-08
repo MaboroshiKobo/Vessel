@@ -10,9 +10,8 @@ import org.maboroshi.vessel.protection.GriefPreventionProtectionAdapter.ClaimAct
  * Covers the config-string-to-{@link ClaimPermission} mapping in isolation. This is the part most
  * at risk of silently breaking on a GriefPrevention version bump: the pinned 16.18.2-SNAPSHOT jar
  * (the newest version actually published to Maven) only has "Inventory," not "Container" — confirmed
- * present in both that jar and 16.18.7 (the newer, non-Maven build Lycohinya's real server runs,
- * verified directly via javap against that deployed jar), so "Inventory" is deliberately what this
- * maps to, not a stale leftover.
+ * present in both that jar and a newer, non-Maven build (16.18.7, verified directly via javap against
+ * that jar), so "Inventory" is deliberately what this maps to, not a stale leftover.
  */
 class GriefPreventionProtectionAdapterTest {
     @Test

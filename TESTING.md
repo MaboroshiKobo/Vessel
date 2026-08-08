@@ -21,14 +21,14 @@ What's deliberately **not** unit tested: anything that has to call into Paper's 
 DataVersion) or into a live GriefPrevention `DataStore`/`Claim`. Those need a running Paper server —
 see below.
 
-## What was verified live (this session)
+## What was verified live
 
 ### Paper 26.2
 
-An isolated Paper 26.2 test server (build 26.2-87, the same jar already validated in Lycohinya's own
-`s01-testbed`) was started with Vessel's built jar plus GriefPrevention 16.18.1-38-g04e7bc7 (the exact
-version resolved by the `com.griefprevention:GriefPrevention:16.18.2-SNAPSHOT` dependency pinned in
-`build.gradle`) installed alongside it:
+An isolated Paper 26.2 test server (build 26.2-87) was started with Vessel's built jar plus
+GriefPrevention 16.18.1-38-g04e7bc7 (the exact version resolved by the
+`com.griefprevention:GriefPrevention:16.18.2-SNAPSHOT` dependency pinned in `build.gradle`) installed
+alongside it:
 
 - Both plugins loaded and enabled with **zero warnings or errors** in the console log — in
   particular, `GriefPreventionProtectionAdapter` registered successfully (no "adapter failed to
@@ -57,44 +57,39 @@ version resolved by the `com.griefprevention:GriefPrevention:16.18.2-SNAPSHOT` d
   distance, not a Vessel bug. Treat entity presence/absence, not `bot.heldItem`, as the reliable
   signal in any future bot-driven test of this plugin.
 
-### Folia / Lophinya 26.2
+### Folia
 
 Two rounds of testing here, because the first round used the wrong artifacts and reached a wrong
 conclusion — corrected below rather than deleted, since the process matters as much as the result.
 
-**Round 1 (generic Luminol build, wrong GriefPrevention version) — misleading.** An isolated server
-built from `Lophinya_Dev/bench/lophinya` (an *unpatched* Luminol-based Folia build, predating
-Lophinya's own compat patches) with GriefPrevention 16.18.2 installed: the server started and Vessel
-enabled cleanly, but GriefPrevention was rejected at load ("not marked as supporting Folia"), and
-even with that check disabled it crashed in `onEnable()`:
+**Round 1 (stock/unpatched Folia build, GriefPrevention 16.18.2) — misleading.** An isolated server
+on an *unpatched* Luminol-based Folia build with GriefPrevention 16.18.2 installed: the server started
+and Vessel enabled cleanly, but GriefPrevention was rejected at load ("not marked as supporting
+Folia"), and even with that check disabled it crashed in `onEnable()`:
 ```
 java.lang.UnsupportedOperationException: sync Bukkit scheduler task from GriefPrevention
 (CraftScheduler.scheduleSyncRepeatingTask, delay=12000, period=12000) is not supported under
 regionised threading
 ```
-This is real behavior for *that specific build* — but it was reported as "GriefPrevention doesn't run
-on Folia/Lophinya," which turned out to be wrong for the fork that actually matters here.
+This is real behavior for *that specific build* — but it was initially reported as "GriefPrevention
+doesn't run on Folia," which turned out to be too broad a conclusion.
 
-**Round 2 (the actual patched Lophinya build + the actual deployed GriefPrevention version) —
-corrected, and this is the finding that stands.** Lycohinya's real `Lophinya_Dev` project has its own
-patch set on top of Lophine/Luminol, in `Lophinya/lophine-server/paper-patches/features/`:
-`0025-Lophinya-folia-supported-gate-defaults-open-...patch` (opens the `folia-supported` load gate
-for any Paper plugin by default) and `0026-Lophinya-generic-plugin-scheduler-dispatch-GriefPrev...patch`
-(adds `LophinyaPluginSchedulerDispatch`, a SHA-256-keyed rule table that redispatches GriefPrevention's
-specific sync-scheduler tasks — `EntityCleanupTask`, `FindUnusedClaimsTask`,
-`DeliverClaimBlocksTask`, `PvPImmunityValidationTask` — to the correct scheduler instead of letting
-them throw). The rule table is keyed to the **exact 16.18.7 jar**, which is what Lycohinya's real
-server actually runs (a non-Maven-published build, obtained outside the CodeMC repo Vessel compiles
-against). Retested with the correct jar (`s01-mirror`'s patched `lophine-26.2.jar`, build/commit
-`7bf8a0c`) and the correct GriefPrevention version (16.18.7, copied from `s01-mirror`'s own
-`plugins/GriefPrevention.jar`), launched with `-Dlophinya.compat.pluginSchedulerDispatch=true`:
+**Round 2 (a Folia fork with compatibility patches + the actual GriefPrevention build it runs) —
+corrected, and this is the finding that stands.** Some Folia-derived server forks carry their own
+patch set on top of Folia/Luminol that (a) opens the `folia-supported` load gate for any Paper plugin
+by default, and (b) redispatches a pinned set of GriefPrevention's sync-scheduler tasks —
+`EntityCleanupTask`, `FindUnusedClaimsTask`, `DeliverClaimBlocksTask`, `PvPImmunityValidationTask` —
+to the correct scheduler instead of letting them throw. The rule table on the fork tested was keyed to
+the exact GriefPrevention 16.18.7 jar (a non-Maven-published build, obtained outside the CodeMC repo
+Vessel compiles against). Retested with that patched Folia build and that exact GriefPrevention
+version, with the fork's compat flag enabled at JVM startup:
 
 ```
-[LophinyaFoliaSupportedGate] folia-supported gate open for GriefPrevention.jar - Lophinya runs any
+[FoliaSupportedGate] folia-supported gate open for GriefPrevention.jar - this fork runs any
 Paper plugin. Region ownership checks (TickThread.ensureTickThread) are unaffected...
 [GriefPrevention] Enabling GriefPrevention v16.18.7
 [GriefPrevention] Finished loading configuration.
-[LophinyaPluginSchedulerDispatch] GriefPrevention: redispatched me.ryanhamshire.GriefPrevention.
+[PluginSchedulerDispatch] GriefPrevention: redispatched me.ryanhamshire.GriefPrevention.
 DeliverClaimBlocksTask (GLOBAL_OR_PLAYER_FIELD, delay=12000, period=12000) - version-locked rule
 table entry, not a general sync-to-global shim
 [GriefPrevention] Boot finished.
@@ -106,14 +101,14 @@ warnings/errors.** No `IllegalStateException`/"failed main thread check" or any 
 thread-ownership violation appeared anywhere in the console log in either round, across plugin
 enable, player join/leave, `/vessel give`, and (round 1) GriefPrevention's crash-and-disable.
 
-**Practical takeaway**: on Lophinya specifically, with the compat flag set, GriefPrevention 16.18.7
-works and Vessel's `GriefPreventionProtectionAdapter` is live. On a generic/vanilla Folia build
-without Lophinya's patches, or with a different GriefPrevention version than what the rule table is
-keyed to, it does not — Vessel handles that gracefully either way (a non-enabled GriefPrevention is
-just treated as absent).
+**Practical takeaway**: on a Folia fork with this kind of compat shim, with its flag set,
+GriefPrevention 16.18.7 works and Vessel's `GriefPreventionProtectionAdapter` is live. On a
+stock/vanilla Folia build without such patches, or with a different GriefPrevention version than what
+the fork's rule table is keyed to, it does not — Vessel handles that gracefully either way (a
+non-enabled GriefPrevention is just treated as absent).
 
-**Still not completed**: a full client-driven capture/release cycle specifically on Folia/Lophinya.
-A mineflayer bot could connect, spawn, and receive items (`/vessel give` confirmed via server log for
+**Still not completed**: a full client-driven capture/release cycle specifically on Folia. A
+mineflayer bot could connect, spawn, and receive items (`/vessel give` confirmed via server log for
 several test accounts across both rounds), but the bot connection proved unstable on these
 experimental builds — it disconnected on its own within seconds to tens of seconds of normal play
 (walking, looking around) in most attempts, with and without RCON teleporting involved, independent
@@ -122,8 +117,8 @@ requiring a stable bot session — GriefPrevention's own boot sequence and Vesse
 complete before any player ever needs to connect). This reproduced across many attempts with
 different usernames and command orderings. Given mineflayer already isn't officially MC
 26.2-compatible and is routed through ViaVersion/ViaBackwards protocol translation to reach even the
-*Paper* server, adding an experimental Folia fork on top compounds into instability beyond what this
-session could fully resolve. This is a tooling gap, not a code gap — the code-level Folia audit
+*Paper* server, adding an experimental Folia fork on top compounds into instability beyond what could
+be fully resolved here. This is a tooling gap, not a code gap — the code-level Folia audit
 (`Bukkit.isOwnedByCurrentRegion` re-validation, per-player `EntityScheduler` dispatch — see README's
 "Folia support" section), the clean load/enable result, and the confirmed-working GriefPrevention
 integration all stand on their own; what's specifically unverified is a live capture/release
@@ -176,21 +171,19 @@ Capture, then release, and confirm each survives the round trip:
 - Restart the server between capture and release — confirm the vessel item (and its data) survived
   a full plugin reload.
 
-### Folia / Lophinya
+### Folia
 
-On Lophinya (Lycohinya's Folia fork), GriefPrevention **does** work — confirmed live this session
-(see "What was verified live" above) — but only with `-Dlophinya.compat.pluginSchedulerDispatch=true`
-set at JVM startup and running the specific GriefPrevention version Lophinya's compat rule table is
-keyed to (16.18.7 as of this writing). Confirm both before assuming the claim-permission matrix is
-reachable: check the server's actual startup flags, and check the GriefPrevention version in its
-plugin.yml/paper-plugin.yml matches what `LophinyaPluginSchedulerDispatch`'s rule table expects (a
-version mismatch reproduces the crash even on Lophinya). On a plain/vanilla Folia build without
-Lophinya's patches, GriefPrevention won't load at all regardless of flags — test the wilderness rows
-only in that case.
+On a Folia fork with a GriefPrevention compatibility shim, GriefPrevention **does** work — confirmed
+live (see "What was verified live" above) — but only with that fork's compat flag set at JVM startup
+and running the specific GriefPrevention version its compat rule table is keyed to (16.18.7 as of this
+writing). Confirm both before assuming the claim-permission matrix is reachable: check the server's
+actual startup flags, and check the GriefPrevention version in its plugin.yml/paper-plugin.yml matches
+what the fork's scheduler-dispatch rule table expects (a version mismatch reproduces the crash even on
+a patched fork). On a plain/vanilla Folia build without such patches, GriefPrevention won't load at
+all regardless of flags — test the wilderness rows only in that case.
 
 Repeat the wilderness capture/release, and — once GriefPrevention is confirmed actually enabled — the
-GriefPrevention matrix rows, on a Folia (or Lophinya) server with multiple loaded regions. Watch
-console for any `IllegalStateException` containing "failed main thread check" — none should appear.
-Specifically try releasing right at the boundary between two regions (walk near the edge of
-loaded/active terrain) to exercise the `Bukkit.isOwnedByCurrentRegion(...)` guard in
-`ReleaseListener`.
+GriefPrevention matrix rows, on a Folia server with multiple loaded regions. Watch console for any
+`IllegalStateException` containing "failed main thread check" — none should appear. Specifically try
+releasing right at the boundary between two regions (walk near the edge of loaded/active terrain) to
+exercise the `Bukkit.isOwnedByCurrentRegion(...)` guard in `ReleaseListener`.

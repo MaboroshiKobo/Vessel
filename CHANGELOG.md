@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to this fork are documented here. Format loosely follows
+All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
@@ -43,22 +43,13 @@ All notable changes to this fork are documented here. Format loosely follows
 - `Vessel.onDisable()` was a no-op; the static plugin instance is now cleared so a PlugMan-style
   unload/reload doesn't leak the previous classloader.
 
-### Notes on Folia/Lophinya + GriefPrevention (confirmed live this session, see `TESTING.md`)
+### Notes on Folia + GriefPrevention (see `TESTING.md`)
 
 - Plain GriefPrevention does not run on a stock/vanilla Folia build (no `folia-supported` declaration,
   calls the legacy `Bukkit.getScheduler().scheduleSyncRepeatingTask` API, which Folia's threading
   model rejects). Vessel handles that gracefully — a crashed-and-disabled GriefPrevention is treated
   the same as "not installed."
-- On **Lophinya** (Lycohinya's own Folia fork) specifically, GriefPrevention 16.18.7 works correctly
-  via Lophinya's own compat patches (`LophinyaFoliaSupportedGate` +
-  `LophinyaPluginSchedulerDispatch`, a version-locked scheduler-redispatch shim), launched with
-  `-Dlophinya.compat.pluginSchedulerDispatch=true`. Confirmed by actually starting it: GriefPrevention
-  16.18.7 boots cleanly and Vessel enables right after with zero errors. An initial test against an
-  unpatched Luminol build and the wrong GriefPrevention version (16.18.2) reached the wrong
-  conclusion — corrected once retested against Lophinya's actual patched build and the actual
-  deployed GriefPrevention version.
-
-## [2.1.1] and earlier
-
-See upstream [MaboroshiKobo/Vessel](https://github.com/MaboroshiKobo/Vessel) releases — this fork's
-history before the changes above matches upstream.
+- Some Folia-derived server forks ship their own compatibility shims that let plugins like
+  GriefPrevention load and run despite this. On a build with such a shim, GriefPrevention 16.18.7 was
+  confirmed to boot cleanly and Vessel enables right after it with zero errors — see `TESTING.md` for
+  the full writeup, including the version-drift trap this uncovered in `ClaimPermission`.
