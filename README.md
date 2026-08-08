@@ -105,7 +105,7 @@ compat shim only covers the specific calls it targets. Practical implications:
   being absent), but the integration is simply inert there.
 * On a Folia fork with this kind of compat shim, whether GriefPrevention runs depends on the shim
   matching the exact GriefPrevention build in use — a scheduler-dispatch shim keyed to a specific jar
-  will not help a different GriefPrevention version. See `TESTING.md` for the full write-up.
+  will not help a different GriefPrevention version.
 
 ## Folia support
 
@@ -150,13 +150,13 @@ permissions plugin.
 * On a plain/vanilla Folia build without a compatibility patch for GriefPrevention's scheduler calls,
   GriefPrevention 16.18.x does not run at all — Vessel handles that gracefully (treated the same as
   GriefPrevention being absent), but the integration is inert there. On a Folia fork that does patch
-  this in, GriefPrevention 16.18.7 was confirmed to run — see `TESTING.md`.
+  this in, GriefPrevention 16.18.7 was confirmed to run.
 * Live client-driven capture/release specifically on Folia was not completed — blocked by mineflayer
   bot-tooling instability on the experimental Folia builds tested (disconnects during normal play,
   unrelated to Vessel's code or to the GriefPrevention compat question, which was separately confirmed
   via server logs). Clean plugin load/enable (with GriefPrevention working) and the code-level
   thread-safety audit are verified; a full interactive capture/release pass on Folia specifically
-  still needs a real Minecraft client. See `TESTING.md`.
+  still needs a real Minecraft client.
 
 ## Documentation & Support
 

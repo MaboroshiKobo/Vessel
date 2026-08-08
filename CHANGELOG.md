@@ -43,7 +43,7 @@ All notable changes to this project are documented here. Format loosely follows
 - `Vessel.onDisable()` was a no-op; the static plugin instance is now cleared so a PlugMan-style
   unload/reload doesn't leak the previous classloader.
 
-### Notes on Folia + GriefPrevention (see `TESTING.md`)
+### Notes on Folia + GriefPrevention
 
 - Plain GriefPrevention does not run on a stock/vanilla Folia build (no `folia-supported` declaration,
   calls the legacy `Bukkit.getScheduler().scheduleSyncRepeatingTask` API, which Folia's threading
@@ -51,5 +51,6 @@ All notable changes to this project are documented here. Format loosely follows
   the same as "not installed."
 - Some Folia-derived server forks ship their own compatibility shims that let plugins like
   GriefPrevention load and run despite this. On a build with such a shim, GriefPrevention 16.18.7 was
-  confirmed to boot cleanly and Vessel enables right after it with zero errors — see `TESTING.md` for
-  the full writeup, including the version-drift trap this uncovered in `ClaimPermission`.
+  confirmed to boot cleanly and Vessel enables right after it with zero errors — see README's
+  "GriefPrevention integration" and "Known limitations" sections, including the version-drift trap
+  this uncovered in `ClaimPermission`.
