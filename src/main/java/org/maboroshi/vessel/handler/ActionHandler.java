@@ -70,6 +70,18 @@ public class ActionHandler {
     private void dispatch(OfflinePlayer player, String command) {
         if (command == null || command.isEmpty()) return;
 
+        Player online = player != null ? player.getPlayer() : null;
+        if (online != null) {
+            // Folia: PlaceholderAPI expansions can read this player's live entity/world state (e.g.
+            // %player_biome%), so placeholder resolution must happen on the player's own thread, not
+            // whichever thread is fanning this action out to everyone online.
+            online.getScheduler().run(plugin, task -> resolveAndDispatch(player, command), null);
+        } else {
+            resolveAndDispatch(player, command);
+        }
+    }
+
+    private void resolveAndDispatch(OfflinePlayer player, String command) {
         String parsed = command;
         if (player != null) {
             String name = player.getName();
