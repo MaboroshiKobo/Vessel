@@ -19,7 +19,7 @@ def getGitHash = { ->
         }
         return stdout.toString().trim()
     } catch (Exception ignored) {
-        return "beta"
+        return "alpha"
     }
 }
 
