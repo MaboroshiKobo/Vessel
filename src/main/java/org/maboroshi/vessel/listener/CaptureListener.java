@@ -127,7 +127,8 @@ public class CaptureListener implements Listener {
         }
 
         if (rules.named && clickedMob.customName() != null) {
-            Messages.send(player, config.getMessageConfig().general.cannotCaptureNamed, Messages.tag("entity_type", mobId));
+            Messages.send(
+                    player, config.getMessageConfig().general.cannotCaptureNamed, Messages.tag("entity_type", mobId));
             return;
         }
 
@@ -222,10 +223,8 @@ public class CaptureListener implements Listener {
 
         itemInHand.subtract();
 
-        player.getInventory()
-                .addItem(resultItem)
-                .values()
-                .forEach(leftover -> player.getWorld().dropItemNaturally(player.getLocation(), leftover));
+        player.getInventory().addItem(resultItem).values().forEach(leftover -> player.getWorld()
+                .dropItemNaturally(player.getLocation(), leftover));
 
         clickedMob.remove();
         plugin.getCooldownHandler().setCooldown(player.getUniqueId());
