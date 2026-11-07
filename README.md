@@ -39,8 +39,124 @@ Vessel is compatible with the following plugins:
 * [MythicMobs](https://mythiccraft.io/) (Optional for custom entity captures)
 * [WorldGuard](https://enginehub.org/worldguard/) (Optional for region protection)
 * [Towny](https://www.townyadvanced.com/) (Optional for town protection)
+* [GriefPrevention](https://github.com/GriefPrevention/GriefPrevention) (Optional for claim protection)
 * [PlaceholderAPI](https://placeholderapi.com/) (Optional)
 * [PluginUpdater](https://modrinth.com/plugin/plugin-updater) (Optional for update checking and automatic updates)
+
+Vessel declares `folia-supported: true` and is tested against both Paper and Folia (including
+Folia-derived forks). See [Folia support](#folia-support) below for what that guarantees.
+
+## Storage format & migration
+
+Captured entity data is stored in a versioned envelope on the vessel item's PersistentDataContainer:
+Vessel schema version, the Minecraft DataVersion at capture time, the codec id, the entity type, the
+serialized entity payload, a CRC32 checksum, and a per-instance Vessel ID. Items captured before this
+envelope existed ("legacy v0" — a bare `EntitySnapshot#getAsString()` value with no envelope) are
+detected automatically and migrated the next time the item is used; there is no server-wide scan.
+
+**What this can and cannot guarantee**, based on reading Paper 26.2's actual `EntitySnapshot`/
+`EntityFactory`/`UnsafeValues` source and Javadocs (not assumptions):
+
+* `EntitySnapshot#getAsString()` is Paper's own `@Experimental` API, and its Javadoc explicitly says
+  the string "should not be relied upon as a serializable value." It is still the least-bad public
+  option for entity serialization — the alternative, `UnsafeValues#serializeEntity`, sits on an
+  interface that has been blanket-`@Deprecated` since Bukkit 1.7.2. Vessel uses `EntitySnapshot`
+  because it is the newer, actively-maintained surface, not because it's promised to be stable.
+* The stored string carries **no embedded Minecraft DataVersion** on its own — Vessel stamps one
+  itself at capture time (`UnsafeValues#getDataVersion()`) so a future migrator has something to
+  key off of. Payloads migrated from legacy v0 predate this and are marked with an explicit "unknown"
+  sentinel rather than a guessed value.
+* Paper does **not** run its DataFixerUpper over this payload on load the way it does for item JSON
+  (`UnsafeValues#deserializeItemFromJson` is explicitly documented as migrating to the latest data
+  version; nothing on the entity-snapshot path makes that claim). Practically: a payload captured on
+  one Minecraft version is expected to load correctly on the same or an adjacent Paper build, but
+  Vessel makes no promise it survives a large version jump unmodified — that's exactly the gap the
+  schema-version/migrator chain exists to eventually close, not something solved today.
+* Vanilla NBT strings hard-cap at 65,535 modified-UTF-8 bytes and silently save as an empty string
+  past that limit — with no runtime warning. Vessel checks the encoded payload size *before* writing
+  it and refuses to capture an entity whose data would exceed a safe margin under that cap, rather
+  than risk silently losing it on the next save.
+* A checksum-mismatched, unparsable, or future-schema-version payload is rejected outright — the
+  item is left completely untouched (no consumption, no attempted spawn).
+
+## GriefPrevention integration
+
+If GriefPrevention is installed, capture and release are each gated by a configurable claim
+permission (`config.yml` → `griefprevention.capture-permission` / `release-permission`, accepted
+values `ACCESS`, `CONTAINER`, `BUILD`; invalid values fall back to a safe default with a warning).
+Everything else — claim ownership, trust lists, subdivisions, Admin Claims, public trust, and the
+`/ignoreclaims` toggle — is delegated entirely to GriefPrevention's own `Claim#checkPermission`, not
+reimplemented. When GriefPrevention denies an action, its specific denial reason is shown to the
+player alongside Vessel's own message. GriefPrevention is a soft dependency: Vessel starts up
+normally without it, and this integration does not affect WorldGuard/Towny support.
+
+**GriefPrevention on Folia: works only on forks that patch in compatibility.** Plain GriefPrevention
+16.18.x does not declare `folia-supported` and internally calls the legacy
+`Bukkit.getScheduler().scheduleSyncRepeatingTask` API, which a stock Folia build rejects outright
+(confirmed directly: `UnsupportedOperationException`, plugin disables itself). Some Folia-derived
+forks ship compatibility patches for exactly this — opening the `folia-supported` load gate for any
+Paper plugin, and redispatching a pinned set of GriefPrevention's sync-scheduler tasks to the correct
+scheduler. On one such fork, this was confirmed to work end to end: GriefPrevention 16.18.7 loads and
+enables cleanly, and Vessel enables right after it with zero errors. Region-ownership checks
+(`TickThread.ensureTickThread`) still apply to everything else GriefPrevention does — a scheduler
+compat shim only covers the specific calls it targets. Practical implications:
+* A stock/vanilla Folia build (no compat patches) will **not** run GriefPrevention 16.18.x at all —
+  Vessel handles that gracefully (a crashed-and-disabled GriefPrevention is treated the same as it
+  being absent), but the integration is simply inert there.
+* On a Folia fork with this kind of compat shim, whether GriefPrevention runs depends on the shim
+  matching the exact GriefPrevention build in use — a scheduler-dispatch shim keyed to a specific jar
+  will not help a different GriefPrevention version.
+
+## Folia support
+
+Capture/release run inside the Bukkit events they're triggered from, which Folia already dispatches
+on the region owning the interacting player — no extra scheduler hop is needed there. The one
+location Vessel computes itself (the release point, found near the clicked block) is re-validated
+with `Bukkit.isOwnedByCurrentRegion(...)` immediately before anything (GriefPrevention's check, the
+entity spawn) touches it, since Folia's region ownership can shift between ticks; if that check
+fails, the release is cleanly rejected rather than risking a cross-region thread violation. Actions
+that fan out to every online player (broadcast sounds, `global: true` command actions) are scheduled
+per-player onto each player's own `EntityScheduler`, since a single calling thread cannot safely read
+or act on players owned by other regions.
+
+## Permissions
+
+Vessel declares no `permissions:` defaults (unchanged from upstream) — grant these through your
+permissions plugin.
+
+* `vessel.use.<type>` — use a specific vessel template (e.g. `vessel.use.consumable`), required for
+  both capture and release.
+* `vessel.capture.<entity_type>` / `vessel.release.<entity_type>` — per-species capture/release (e.g.
+  `vessel.capture.cow`); `vessel.capture.*` / `vessel.release.*` grant all species.
+* `vessel.capture.<group>` / `vessel.release.<group>` — capture/release by category instead of
+  per-species: `animals`, `monsters`, `golems`, `fish`, `watermobs`, `ambient`, `raiders`, `bosses`,
+  `illagers`, `tameable`, `npcs`.
+* `vessel.command.about`, `vessel.command.help`, `vessel.command.reload`, `vessel.command.give` —
+  the `/vessel` subcommands.
+
+## Known limitations
+
+* Entity data captured on one Minecraft/Paper version is not guaranteed to load correctly after a
+  large version jump — see "Storage format & migration" above.
+* Data larger than the safe PDC string threshold cannot be captured at all (the player is told why).
+  No entity type is hardcoded as excluded for this reason; it depends on how much state that specific
+  entity instance is carrying (trades, passengers, custom NBT, etc.).
+* Vessel compiles against `com.griefprevention:GriefPrevention:16.18.2-SNAPSHOT` (the newest version
+  actually published to Maven), whose `ClaimPermission` enum has `Inventory` but not `Container` — a
+  newer, non-Maven-published GriefPrevention build (16.18.7) has both, confirmed directly via `javap`
+  against that jar. `GriefPreventionProtectionAdapter` deliberately maps to `Inventory` — the one name
+  confirmed present in both versions. If a future Maven-published version drops `Inventory` entirely,
+  that mapping needs to move to `Container`.
+* On a plain/vanilla Folia build without a compatibility patch for GriefPrevention's scheduler calls,
+  GriefPrevention 16.18.x does not run at all — Vessel handles that gracefully (treated the same as
+  GriefPrevention being absent), but the integration is inert there. On a Folia fork that does patch
+  this in, GriefPrevention 16.18.7 was confirmed to run.
+* Live client-driven capture/release specifically on Folia was not completed — blocked by mineflayer
+  bot-tooling instability on the experimental Folia builds tested (disconnects during normal play,
+  unrelated to Vessel's code or to the GriefPrevention compat question, which was separately confirmed
+  via server logs). Clean plugin load/enable (with GriefPrevention working) and the code-level
+  thread-safety audit are verified; a full interactive capture/release pass on Folia specifically
+  still needs a real Minecraft client.
 
 ## Documentation & Support
 
